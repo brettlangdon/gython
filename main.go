@@ -15,9 +15,11 @@ func main() {
 	}
 	for {
 		tok := tokenizer.Next()
+		tokenRange := fmt.Sprintf("%d,%d-%d,%d:", tok.LineStart, tok.ColumnStart, tok.LineEnd, tok.ColumnEnd)
+		literalRep := fmt.Sprintf("%#v", tok.Literal)
+		fmt.Printf("%-20s%-15s%15s\n", tokenRange, tok.String(), literalRep)
 		if tok.ID == token.ENDMARKER || tok.ID == token.ERRORTOKEN {
 			break
 		}
-		fmt.Println(fmt.Sprintf("<%s> %s", tok, tok.Repr()))
 	}
 }
