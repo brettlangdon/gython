@@ -8,30 +8,38 @@ import (
 )
 
 var EOF rune = 0
+var MAXINDENT int = 100
 
 type TokenizerState struct {
-	buffer       *bufio.Reader
-	curColumn    int
-	curIndent    int
-	curLevel     int
-	curLine      int
-	curLiteral   string
-	fp           *os.File
-	nestingLevel int
-	offset       int
-	tabsize      int
+	atBol               bool
+	buffer              *bufio.Reader
+	curColumn           int
+	curLine             int
+	curLiteral          string
+	fp                  *os.File
+	indentationLevel    int
+	indentationAltStack []int
+	indentationCurrent  int
+	indentationPending  int
+	indentationStack    []int
+	offset              int
+	tabsize             int
+	tabsizeAlt          int
 }
 
 func newTokenizerState() *TokenizerState {
 	return &TokenizerState{
-		curColumn:    0,
-		curIndent:    0,
-		curLevel:     0,
-		curLine:      1,
-		curLiteral:   "",
-		nestingLevel: 0,
-		offset:       0,
-		tabsize:      8,
+		atBol:               true,
+		curColumn:           0,
+		curLine:             1,
+		curLiteral:          "",
+		indentationAltStack: make([]int, MAXINDENT),
+		indentationCurrent:  0,
+		indentationLevel:    0,
+		indentationPending:  0,
+		indentationStack:    make([]int, MAXINDENT),
+		offset:              0,
+		tabsize:             8,
 	}
 }
 
@@ -243,21 +251,79 @@ end:
 }
 
 func (tokenizer *TokenizerState) Next() *token.Token {
+next_line:
 	curTok := tokenizer.newToken()
-	col := 0
 	nextChar := EOF
-	// Get indentation level
-	for {
-		nextChar = tokenizer.readNext()
-		if nextChar == ' ' {
-			col += 1
-		} else if nextChar == '\t' {
-			col = (col/tokenizer.tabsize + 1) * tokenizer.tabsize
-		} else {
-			break
+	blankline := false
+
+	if tokenizer.atBol {
+		// Get indentation level
+		col := 0
+		altcol := 0
+		tokenizer.atBol = false
+		for {
+			nextChar = tokenizer.readNext()
+			if nextChar == ' ' {
+				col++
+				altcol++
+			} else if nextChar == '\t' {
+				col = (col/tokenizer.tabsize + 1) * tokenizer.tabsize
+				altcol = (altcol/tokenizer.tabsizeAlt + 1) * tokenizer.tabsizeAlt
+			} else {
+				break
+			}
+		}
+		tokenizer.unread()
+
+		if nextChar == '#' || nextChar == '\n' {
+			// Lines with only newline or comment, shouldn't affect indentation
+			if col == 0 && nextChar == '\n' {
+				blankline = false
+			} else {
+				blankline = true
+			}
+		}
+		if !blankline && tokenizer.indentationLevel == 0 {
+			if col == tokenizer.indentationStack[tokenizer.indentationCurrent] {
+				if altcol != tokenizer.indentationAltStack[tokenizer.indentationCurrent] {
+					return tokenizer.finalizeToken(curTok, token.ERRORTOKEN)
+				}
+			} else if col > tokenizer.indentationStack[tokenizer.indentationCurrent] {
+				if tokenizer.indentationCurrent+1 >= MAXINDENT {
+					return tokenizer.finalizeToken(curTok, token.ERRORTOKEN)
+				}
+				if altcol <= tokenizer.indentationAltStack[tokenizer.indentationCurrent] {
+					return tokenizer.finalizeToken(curTok, token.ERRORTOKEN)
+				}
+				tokenizer.indentationPending++
+				tokenizer.indentationCurrent++
+				tokenizer.indentationStack[tokenizer.indentationCurrent] = col
+				tokenizer.indentationAltStack[tokenizer.indentationCurrent] = altcol
+
+			} else {
+				for tokenizer.indentationCurrent > 0 && col < tokenizer.indentationStack[tokenizer.indentationCurrent] {
+					tokenizer.indentationPending--
+					tokenizer.indentationCurrent--
+				}
+				if col != tokenizer.indentationStack[tokenizer.indentationCurrent] {
+					return tokenizer.finalizeToken(curTok, token.ERRORTOKEN)
+				}
+				if altcol != tokenizer.indentationAltStack[tokenizer.indentationCurrent] {
+					return tokenizer.finalizeToken(curTok, token.ERRORTOKEN)
+				}
+			}
 		}
 	}
-	tokenizer.unread()
+
+	if tokenizer.indentationPending != 0 {
+		if tokenizer.indentationPending < 0 {
+			tokenizer.indentationPending++
+			return tokenizer.finalizeToken(curTok, token.DEDENT)
+		} else {
+			tokenizer.indentationPending--
+			return tokenizer.finalizeToken(curTok, token.INDENT)
+		}
+	}
 
 again:
 	// Skip spaces
@@ -283,6 +349,7 @@ again:
 
 	// Check for EOF
 	if nextChar == EOF {
+		tokenizer.curLiteral = ""
 		return tokenizer.finalizeToken(curTok, token.ENDMARKER)
 	}
 
@@ -312,6 +379,10 @@ again:
 
 	// Newline
 	if nextChar == '\n' {
+		tokenizer.atBol = true
+		if blankline || tokenizer.indentationLevel > 0 {
+			goto next_line
+		}
 		tokenizer.curLine += 1
 		tokenizer.curColumn = 0
 		return tokenizer.finalizeToken(curTok, token.NEWLINE)
@@ -379,10 +450,10 @@ letter_quote:
 
 	switch nextChar {
 	case '(', '[', '{':
-		tokenizer.nestingLevel++
+		tokenizer.indentationLevel++
 		break
 	case ')', ']', '}':
-		tokenizer.nestingLevel--
+		tokenizer.indentationLevel--
 		break
 	}
 
