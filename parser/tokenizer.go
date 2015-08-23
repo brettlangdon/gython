@@ -24,7 +24,7 @@ type TokenizerState struct {
 
 func newTokenizerState() *TokenizerState {
 	return &TokenizerState{
-		curColumn:    1,
+		curColumn:    0,
 		curIndent:    0,
 		curLevel:     0,
 		curLine:      1,
@@ -53,6 +53,7 @@ func (tokenizer *TokenizerState) readNext() rune {
 		next = EOF
 	}
 	tokenizer.offset += 1
+	tokenizer.curColumn += 1
 	if next != EOF {
 		tokenizer.curLiteral += string(next)
 	}
@@ -62,6 +63,7 @@ func (tokenizer *TokenizerState) readNext() rune {
 func (tokenizer *TokenizerState) unread() error {
 	err := tokenizer.buffer.UnreadRune()
 	tokenizer.offset -= 1
+	tokenizer.curColumn -= 1
 	if len(tokenizer.curLiteral) > 0 {
 		tokenizer.curLiteral = tokenizer.curLiteral[0 : len(tokenizer.curLiteral)-1]
 	}
@@ -70,7 +72,8 @@ func (tokenizer *TokenizerState) unread() error {
 
 func (tokenizer *TokenizerState) finalizeToken(tok *token.Token, tokId token.TokenID) *token.Token {
 	tok.ID = tokId
-	tok.End = tokenizer.offset
+	tok.LineEnd = tokenizer.curLine
+	tok.ColumnEnd = tokenizer.curColumn
 	tok.Literal = tokenizer.curLiteral
 	return tok
 }
@@ -78,10 +81,12 @@ func (tokenizer *TokenizerState) finalizeToken(tok *token.Token, tokId token.Tok
 func (tokenizer *TokenizerState) newToken() *token.Token {
 	tokenizer.curLiteral = ""
 	return &token.Token{
-		ID:      token.ERRORTOKEN,
-		Start:   tokenizer.offset,
-		End:     tokenizer.offset - 1,
-		Literal: tokenizer.curLiteral,
+		ID:          token.ERRORTOKEN,
+		LineStart:   tokenizer.curLine,
+		ColumnStart: tokenizer.curColumn,
+		LineEnd:     tokenizer.curLine,
+		ColumnEnd:   tokenizer.curColumn,
+		Literal:     tokenizer.curLiteral,
 	}
 }
 
@@ -262,7 +267,8 @@ again:
 			break
 		}
 	}
-	curTok.Start = tokenizer.offset - 1
+	curTok.LineStart = tokenizer.curLine
+	curTok.ColumnStart = tokenizer.curColumn - 1
 	tokenizer.curLiteral = string(nextChar)
 
 	// Skip comments
@@ -306,6 +312,8 @@ again:
 
 	// Newline
 	if nextChar == '\n' {
+		tokenizer.curLine += 1
+		tokenizer.curColumn = 0
 		return tokenizer.finalizeToken(curTok, token.NEWLINE)
 	}
 
