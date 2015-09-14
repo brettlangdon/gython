@@ -45,6 +45,9 @@ func (positions *Positions) EndingColumn() int {
 func (positions *Positions) String() string {
 	literal := ""
 	for _, pos := range positions.positions {
+		if pos.Char == EOF {
+			continue
+		}
 		literal += string(pos.Char)
 	}
 
