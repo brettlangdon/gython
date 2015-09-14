@@ -51,9 +51,12 @@ var TokenNames = map[TokenID]string{
 	DOUBLESLASH:      "DOUBLESLASH",
 	DOUBLESLASHEQUAL: "DOUBLESLASHEQUAL",
 	AT:               "AT",
+	ATEQUAL:          "ATEQUAL",
 	RARROW:           "RARROW",
 	ELLIPSIS:         "ELLIPSIS",
 	OP:               "OP",
+	AWAIT:            "AWAIT",
+	ASYNC:            "ASYNC",
 	ERRORTOKEN:       "<ERRORTOKEN>",
 	N_TOKENS:         "<N_TOKENS>",
 }
