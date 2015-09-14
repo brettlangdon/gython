@@ -116,6 +116,12 @@ func GetTwoCharTokenID(curChar rune, nextChar rune) token.TokenID {
 			return token.CIRCUMFLEXEQUAL
 		}
 		break
+	case '@':
+		switch nextChar {
+		case '=':
+			return token.ATEQUAL
+		}
+		break
 	}
 	return token.OP
 }
