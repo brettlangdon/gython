@@ -47,18 +47,17 @@ func (scanner *Scanner) nextPosition() *Position {
 		scanner.currentColumn = 0
 	}
 
-	pos := &Position{
-		Char:   next,
-		Line:   scanner.currentLine,
-		Column: scanner.currentColumn,
-	}
-
-	scanner.currentColumn++
 	if next == '\n' || next == EOF {
 		scanner.currentLine++
 		scanner.currentColumn = 0
 	}
 
+	pos := &Position{
+		Char:   next,
+		Line:   scanner.currentLine,
+		Column: scanner.currentColumn,
+	}
+	scanner.currentColumn++
 	return pos
 }
 
