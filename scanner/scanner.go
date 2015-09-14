@@ -19,6 +19,8 @@ type Scanner struct {
 
 	currentLine   int
 	currentColumn int
+
+	asyncDef bool
 }
 
 func NewScanner(r io.Reader) *Scanner {
@@ -163,6 +165,26 @@ func (scanner *Scanner) NextToken() *token.Token {
 			pos = scanner.nextPosition()
 		}
 		scanner.unreadPosition(pos)
+
+		// Check for async/await
+		// literal := positions.String()
+		// if literal == "async" || literal == "await" {
+		// 	if scanner.asyncDef {
+		// 		switch literal {
+		// 		case "async":
+		// 			return positions.AsToken(token.ASYNC)
+		// 		case "await":
+		// 			return positions.AsToken(token.AWAIT)
+		// 		}
+		// 	} else if literal == "async" {
+		// 		nextToken := scanner.NextToken()
+		// 		if nextToken.ID == token.NAME && nextToken.Literal == "def" {
+		// 			scanner.asyncDef = true
+		// 			return positions.AsToken(token.ASYNC)
+		// 		}
+		// 	}
+		// }
+
 		return positions.AsToken(token.NAME)
 	case ch == '\n':
 		return positions.AsToken(token.NEWLINE)
