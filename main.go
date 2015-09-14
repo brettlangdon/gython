@@ -4,17 +4,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/brettlangdon/gython/parser"
+	"github.com/brettlangdon/gython/scanner"
 	"github.com/brettlangdon/gython/token"
 )
 
 func main() {
-	tokenizer, err := parser.TokenizerFromFileName(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
+	tokenizer := scanner.NewScanner(os.Stdin)
 	for {
-		tok := tokenizer.Next()
+		tok := tokenizer.NextToken()
 		tokenRange := fmt.Sprintf("%d,%d-%d,%d:", tok.LineStart, tok.ColumnStart, tok.LineEnd, tok.ColumnEnd)
 		literalRep := fmt.Sprintf("%#v", tok.Literal)
 		fmt.Printf("%-20s%-15s%15s\n", tokenRange, tok.String(), literalRep)
