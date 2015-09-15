@@ -5,8 +5,8 @@ This project is currently a for-fun work in progress.
 
 The main goals of this project are to learn about programming languages by trying to rewrite [CPython][] 3.5.0 in [Go][].
 
-CPython:https://github.com/python/cpython
-Go:https://github.com/golang/go/
+[CPython]:https://github.com/python/cpython
+[Go]:https://github.com/golang/go/
 
 ## Progress
 ### Scanner
