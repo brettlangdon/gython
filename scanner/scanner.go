@@ -12,24 +12,39 @@ var EOF rune = 0
 var MAXINDENT int = 100
 
 type Scanner struct {
-	state           errorcode.ErrorCode
-	reader          *bufio.Reader
-	currentPosition *Position
-	positionBuffer  []*Position
-
-	currentLine   int
-	currentColumn int
-
-	asyncDef bool
+	asyncDef            bool
+	atBol               bool
+	currentColumn       int
+	currentLine         int
+	currentPosition     *Position
+	indentationAltStack []int
+	indentationCurrent  int
+	indentationLevel    int
+	indentationPending  int
+	indentationStack    []int
+	positionBuffer      []*Position
+	tokenBuffer         []*token.Token
+	reader              *bufio.Reader
+	state               errorcode.ErrorCode
+	tabsize             int
+	tabsizeAlt          int
 }
 
 func NewScanner(r io.Reader) *Scanner {
 	return &Scanner{
-		state:          errorcode.E_OK,
-		reader:         bufio.NewReader(r),
-		positionBuffer: make([]*Position, 0),
-		currentLine:    1,
-		currentColumn:  0,
+		atBol:               true,
+		currentColumn:       0,
+		currentLine:         1,
+		indentationAltStack: make([]int, MAXINDENT),
+		indentationCurrent:  0,
+		indentationLevel:    0,
+		indentationPending:  0,
+		indentationStack:    make([]int, MAXINDENT),
+		positionBuffer:      make([]*Position, 0),
+		tokenBuffer:         make([]*token.Token, 0),
+		reader:              bufio.NewReader(r),
+		state:               errorcode.E_OK,
+		tabsize:             8,
 	}
 }
 
@@ -193,10 +208,109 @@ func (scanner *Scanner) parseQuoted(positions *Positions, quote rune) *token.Tok
 	return positions.AsToken(token.STRING)
 }
 
-func (scanner *Scanner) NextToken() *token.Token {
-	positions := NewPositions()
+func (scanner *Scanner) unreadToken(tok *token.Token) {
+	scanner.tokenBuffer = append(scanner.tokenBuffer, tok)
+}
 
-	pos := scanner.nextPosition()
+func (scanner *Scanner) NextToken() *token.Token {
+	if len(scanner.tokenBuffer) > 0 {
+		last := len(scanner.tokenBuffer) - 1
+		nextToken := scanner.tokenBuffer[last]
+		scanner.tokenBuffer = scanner.tokenBuffer[0:last]
+		return nextToken
+	}
+
+	blankline := false
+	positions := NewPositions()
+	var pos *Position
+
+	if scanner.atBol {
+		// Get indentation level
+		col := 0
+		altcol := 0
+		scanner.atBol = false
+		pos = scanner.nextPosition()
+		for {
+			if pos.Char == ' ' {
+				col++
+				altcol++
+			} else if pos.Char == '\t' {
+				col = (col/scanner.tabsize + 1) * scanner.tabsize
+				altcol = (altcol/scanner.tabsizeAlt + 1) * scanner.tabsizeAlt
+			} else {
+				break
+			}
+			pos = scanner.nextPosition()
+		}
+		scanner.unreadPosition(pos)
+
+		if pos.Char == '#' || pos.Char == '\n' {
+			// Lines with only newline or comment, shouldn't affect indentation
+			if col == 0 && pos.Char == '\n' {
+				blankline = false
+			} else {
+				blankline = true
+			}
+		}
+		if !blankline && scanner.indentationLevel == 0 {
+			if col == scanner.indentationStack[scanner.indentationCurrent] {
+				if altcol != scanner.indentationAltStack[scanner.indentationCurrent] {
+					return positions.AsToken(token.ERRORTOKEN)
+				}
+			} else if col > scanner.indentationStack[scanner.indentationCurrent] {
+				if scanner.indentationCurrent+1 >= MAXINDENT {
+					return positions.AsToken(token.ERRORTOKEN)
+				}
+				if altcol <= scanner.indentationAltStack[scanner.indentationCurrent] {
+					return positions.AsToken(token.ERRORTOKEN)
+				}
+				scanner.indentationPending++
+				scanner.indentationCurrent++
+				scanner.indentationStack[scanner.indentationCurrent] = col
+				scanner.indentationAltStack[scanner.indentationCurrent] = altcol
+
+			} else {
+				for scanner.indentationCurrent > 0 && col < scanner.indentationStack[scanner.indentationCurrent] {
+					scanner.indentationPending--
+					scanner.indentationCurrent--
+				}
+				if col != scanner.indentationStack[scanner.indentationCurrent] {
+					return positions.AsToken(token.ERRORTOKEN)
+				}
+				if altcol != scanner.indentationAltStack[scanner.indentationCurrent] {
+					return positions.AsToken(token.ERRORTOKEN)
+				}
+			}
+		}
+	}
+
+	if scanner.indentationPending != 0 {
+		if scanner.indentationPending < 0 {
+			scanner.indentationPending++
+			pos = scanner.currentPosition
+			return &token.Token{
+				ID:          token.DEDENT,
+				LineStart:   pos.Line,
+				ColumnStart: pos.Column,
+				LineEnd:     pos.Line,
+				ColumnEnd:   pos.Column,
+				Literal:     "",
+			}
+		} else {
+			scanner.indentationPending--
+			pos = scanner.currentPosition
+			return &token.Token{
+				ID:          token.INDENT,
+				LineStart:   pos.Line,
+				ColumnStart: pos.Column,
+				LineEnd:     pos.Line,
+				ColumnEnd:   pos.Column + 4,
+				Literal:     "    ",
+			}
+		}
+	}
+
+	pos = scanner.nextPosition()
 	// skip spaces
 	for {
 		if pos.Char != ' ' && pos.Char != '\t' {
@@ -270,6 +384,7 @@ func (scanner *Scanner) NextToken() *token.Token {
 
 		return positions.AsToken(token.NAME)
 	case ch == '\n':
+		scanner.atBol = true
 		return positions.AsToken(token.NEWLINE)
 	case ch == '.':
 		pos2 := scanner.nextPosition()
