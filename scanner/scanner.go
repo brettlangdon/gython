@@ -364,23 +364,25 @@ func (scanner *Scanner) NextToken() *token.Token {
 		scanner.unreadPosition(pos)
 
 		// Check for async/await
-		// literal := positions.String()
-		// if literal == "async" || literal == "await" {
-		// 	if scanner.asyncDef {
-		// 		switch literal {
-		// 		case "async":
-		// 			return positions.AsToken(token.ASYNC)
-		// 		case "await":
-		// 			return positions.AsToken(token.AWAIT)
-		// 		}
-		// 	} else if literal == "async" {
-		// 		nextToken := scanner.NextToken()
-		// 		if nextToken.ID == token.NAME && nextToken.Literal == "def" {
-		// 			scanner.asyncDef = true
-		// 			return positions.AsToken(token.ASYNC)
-		// 		}
-		// 	}
-		// }
+		literal := positions.String()
+		if literal == "async" || literal == "await" {
+			if scanner.asyncDef {
+				switch literal {
+				case "async":
+					return positions.AsToken(token.ASYNC)
+				case "await":
+					return positions.AsToken(token.AWAIT)
+				}
+			} else if literal == "async" {
+				nextToken := scanner.NextToken()
+				if nextToken.ID == token.NAME && nextToken.Literal == "def" {
+					scanner.asyncDef = true
+					scanner.unreadToken(nextToken)
+					return positions.AsToken(token.ASYNC)
+				}
+				scanner.unreadToken(nextToken)
+			}
+		}
 
 		return positions.AsToken(token.NAME)
 	case ch == '\n':
