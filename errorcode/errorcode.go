@@ -2,6 +2,10 @@ package errorcode
 
 type ErrorCode int
 
+func (code ErrorCode) String() string {
+	return ErrorNames[code]
+}
+
 const (
 	E_OK         ErrorCode = 10 /* No error */
 	E_EOF        ErrorCode = 11 /* End Of File */
@@ -21,5 +25,4 @@ const (
 	E_LINECONT   ErrorCode = 25 /* Unexpected characters after a line continuation */
 	E_IDENTIFIER ErrorCode = 26 /* Invalid characters in identifier */
 	E_BADSINGLE  ErrorCode = 27 /* Ill-formed single statement input */
-
 )
