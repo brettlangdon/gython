@@ -67,6 +67,89 @@ func (scanner *Scanner) unreadPosition(pos *Position) {
 	scanner.positionBuffer = append(scanner.positionBuffer, pos)
 }
 
+func (scanner *Scanner) parseNumber(positions *Positions, nextChar rune) *token.Token {
+	pos := scanner.nextPosition()
+	switch ch := pos.Char; {
+	case nextChar == '0' && (ch == 'j' || ch == 'J'):
+		// Imaginary
+		positions.Append(pos)
+	case nextChar == '0' && (ch == 'x' || ch == 'X'):
+		// Hex
+		positions.Append(pos)
+		pos = scanner.nextPosition()
+		if !IsXDigit(pos.Char) {
+			return positions.AsToken(token.ERRORTOKEN)
+		}
+		for IsXDigit(pos.Char) {
+			positions.Append(pos)
+			pos = scanner.nextPosition()
+		}
+		scanner.unreadPosition(pos)
+	case nextChar == '0' && (ch == 'b' || ch == 'B'):
+		// Binary
+		positions.Append(pos)
+		pos = scanner.nextPosition()
+		if pos.Char != '0' && pos.Char != '1' {
+			return positions.AsToken(token.ERRORTOKEN)
+		}
+		for pos.Char == '0' || pos.Char == '1' {
+			positions.Append(pos)
+			pos = scanner.nextPosition()
+		}
+		scanner.unreadPosition(pos)
+	case nextChar == '0' && (ch == 'o' || ch == 'O'):
+		// Octal
+		positions.Append(pos)
+		pos = scanner.nextPosition()
+		if pos.Char < '0' || pos.Char >= '8' {
+			return positions.AsToken(token.ERRORTOKEN)
+		}
+		for pos.Char >= '0' && pos.Char < '8' {
+			positions.Append(pos)
+			pos = scanner.nextPosition()
+		}
+		scanner.unreadPosition(pos)
+	default:
+		decimal := nextChar == '.'
+		imaginary := false
+		exponent := false
+		for {
+			if pos.Char == '.' && decimal {
+				break
+			} else if pos.Char == '.' && !decimal {
+				decimal = true
+			} else if (pos.Char == 'j' || pos.Char == 'J') && !imaginary {
+				imaginary = true
+			} else if (pos.Char == 'e' || pos.Char == 'E') && !exponent {
+				exponent = true
+				positions.Append(pos)
+				pos2 := scanner.nextPosition()
+				if pos2.Char == '-' || pos2.Char == '+' {
+					pos3 := scanner.nextPosition()
+					if !IsDigit(pos3.Char) {
+						return positions.AsToken(token.ERRORTOKEN)
+					}
+					scanner.unreadPosition(pos3)
+					positions.Append(pos2)
+				} else if !IsDigit(pos2.Char) {
+					return positions.AsToken(token.ERRORTOKEN)
+				} else {
+					scanner.unreadPosition(pos2)
+				}
+				pos = scanner.nextPosition()
+				continue
+			} else if !IsDigit(pos.Char) {
+				break
+			}
+			positions.Append(pos)
+			pos = scanner.nextPosition()
+		}
+		scanner.unreadPosition(pos)
+	}
+
+	return positions.AsToken(token.NUMBER)
+}
+
 func (scanner *Scanner) parseQuoted(positions *Positions, quote rune) *token.Token {
 	// Determine quote size, 1 or 3 (e.g. 'string',  '''string''')
 	quoteSize := 1
@@ -191,7 +274,8 @@ func (scanner *Scanner) NextToken() *token.Token {
 	case ch == '.':
 		pos2 := scanner.nextPosition()
 		if IsDigit(pos2.Char) {
-			// Parse Number
+			positions.Append(pos2)
+			return scanner.parseNumber(positions, pos2.Char)
 		} else if pos2.Char == '.' {
 			positions.Append(pos2)
 			pos3 := scanner.nextPosition()
@@ -206,6 +290,7 @@ func (scanner *Scanner) NextToken() *token.Token {
 		return positions.AsToken(token.DOT)
 	case IsDigit(ch):
 		// Parse Number
+		return scanner.parseNumber(positions, ch)
 	case IsQuote(ch):
 		// Parse String
 		return scanner.parseQuoted(positions, ch)
