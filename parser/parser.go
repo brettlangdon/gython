@@ -48,7 +48,7 @@ func (parser *Parser) expect(tokID token.TokenID) bool {
 
 func (parser *Parser) expectLiteral(literal string) bool {
 	next := parser.nextToken()
-	if next.ID != token.NAME || next.Literal != literal {
+	if !next.IsLiteral(literal) {
 		msg := "Unexpected literal \"" + next.Literal + "\" expected \"" + literal + "\""
 		parser.addError(msg)
 		return false
@@ -78,7 +78,7 @@ func (parser *Parser) parseOrTest() *ast.OrTest {
 	orTest.Append(andTest)
 	for {
 		next := parser.nextToken()
-		if next.ID != token.NAME || next.Literal != "and" {
+		if !next.IsLiteral("and") {
 			parser.unreadToken(next)
 			break
 		}
@@ -100,7 +100,7 @@ func (parser *Parser) parseTest() *ast.Test {
 		test.Append(orTest)
 		next := parser.nextToken()
 		// Do not use `parser.expectLiteral`, this next part is optional
-		if next.ID == token.NAME && next.Literal == "if" {
+		if next.IsLiteral("if") {
 			orTest = parser.parseOrTest()
 			if orTest != nil {
 				test.Append(orTest)

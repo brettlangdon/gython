@@ -23,6 +23,10 @@ func (token *Token) End() []int {
 	return []int{token.LineEnd, token.ColumnEnd}
 }
 
+func (token *Token) IsLiteral(literal string) bool {
+	return token.ID == NAME && token.Literal == literal
+}
+
 func (token *Token) Repr() string {
 	return fmt.Sprintf(
 		"Token{ID: %#v, Literal: %#v, LineStart: %#v, ColumnStart: %#v, LineEnd: %#v, ColumnEnd: %#v}",
