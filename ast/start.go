@@ -10,6 +10,5 @@ func NewFileInput() *FileInput {
 	node.initListNode()
 	return node
 }
-func (node *FileInput) AppendNode(n StatementNode) {
-	node.ListNode.AppendNode(n)
-}
+
+func (node *FileInput) Append(n *Statement) { node.ListNode.Append(n) }

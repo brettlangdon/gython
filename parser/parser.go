@@ -50,21 +50,34 @@ func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
 	return compoundStmt
 }
 
+// test: or_test ['if' or_test 'else' test] | lambdef
+func (parser *Parser) parseTest() *ast.Test {
+	test := ast.NewTest()
+	return test
+}
+
 // testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
-func (parser *Parser) parseTestlistStartExpr() *ast.TestlistStartExpr {
-	testlistStartExpr := ast.NewTestListStartExpr()
-	return testlistStartExpr
+func (parser *Parser) parseTestlistStarExpression() *ast.TestlistStarExpression {
+	testlistStarExpression := ast.NewTestListStarExpression()
+
+	var expr ast.Node
+	expr = parser.parseTest()
+	if expr == nil {
+		return nil
+	}
+	testlistStarExpression.SetChild(expr)
+	return testlistStarExpression
 }
 
 // expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
 //                      ('=' (yield_expr|testlist_star_expr))*)
 func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	exprStmt := ast.NewExpressionStatement()
-	testlistStartExpr := parser.parseTestlistStartExpr()
-	if testlistStartExpr == nil {
+	testlistStarExpression := parser.parseTestlistStarExpression()
+	if testlistStarExpression == nil {
 		return nil
 	}
-	exprStmt.Expression = testlistStartExpr
+	exprStmt.SetChild(testlistStarExpression)
 	return exprStmt
 }
 
@@ -76,7 +89,7 @@ func (parser *Parser) parseSmallStatment() *ast.SmallStatement {
 	var stmt ast.SmallStatementNode
 	stmt = parser.parseExpressionStatement()
 	if stmt != nil {
-		smallStmt.Statement = stmt
+		smallStmt.SetChild(stmt)
 	}
 
 	if stmt == nil {
@@ -93,7 +106,7 @@ func (parser *Parser) parseSimpleStatement() *ast.SimpleStatement {
 		if smallStmt == nil {
 			break
 		}
-		simpleStmt.AppendNode(smallStmt)
+		simpleStmt.Append(smallStmt)
 		next := parser.nextToken()
 		if next.ID != token.SEMI {
 			parser.unreadToken(next)
@@ -122,7 +135,7 @@ func (parser *Parser) parseStatement() *ast.Statement {
 	}
 
 	stmt := ast.NewStatement()
-	stmt.Statement = next
+	stmt.SetChild(next)
 	return stmt
 }
 
@@ -132,7 +145,8 @@ func (parser *Parser) parseFileInput() *ast.FileInput {
 	for parser.tokenizer.State() == errorcode.E_OK {
 		next := parser.nextToken()
 		if next.ID == token.NEWLINE {
-			root.AppendToken(next)
+			// root.Append(ast.NewTokenNode(next))
+			continue
 		} else if next.ID == token.ENDMARKER {
 			// Unread, so we can read in the expected value later
 			parser.unreadToken(next)
@@ -143,7 +157,7 @@ func (parser *Parser) parseFileInput() *ast.FileInput {
 			if stmt == nil {
 				break
 			}
-			root.AppendNode(stmt)
+			root.Append(stmt)
 			break
 		}
 	}
