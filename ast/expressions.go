@@ -1,8 +1,8 @@
 package ast
 
-type ExpressionNode interface {
+type TestlistStarExpressionChildNode interface {
 	Node
-	exprNode()
+	testlistStarExpressionChild()
 }
 
 type TestlistStarExpression struct {
@@ -13,4 +13,8 @@ func NewTestListStarExpression() *TestlistStarExpression {
 	node := &TestlistStarExpression{}
 	node.initBaseNode(TESTLIST_STAR_EXPR)
 	return node
+}
+
+func (node *TestlistStarExpression) SetChild(n TestlistStarExpressionChildNode) {
+	node.ParentNode.SetChild(n)
 }

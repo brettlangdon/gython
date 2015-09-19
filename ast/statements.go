@@ -1,8 +1,8 @@
 package ast
 
-type StatementNode interface {
+type StatementChildNode interface {
 	Node
-	stmtNode()
+	stmtChildNode()
 }
 
 type Statement struct {
@@ -15,7 +15,7 @@ func NewStatement() *Statement {
 	return node
 }
 
-func (node *Statement) SetChild(n StatementNode) { node.ParentNode.SetChild(n) }
+func (node *Statement) SetChild(n StatementChildNode) { node.ParentNode.SetChild(n) }
 
 type SimpleStatement struct {
 	ListNode
@@ -28,7 +28,7 @@ func NewSimpleStatement() *SimpleStatement {
 	return node
 }
 
-func (node *SimpleStatement) stmtNode()                {}
+func (node *SimpleStatement) stmtChildNode()           {}
 func (node *SimpleStatement) Append(n *SmallStatement) { node.ListNode.Append(n) }
 
 type CompoundStatement struct {
@@ -40,4 +40,4 @@ func NewCompoundStatement() *CompoundStatement {
 	node.initBaseNode(COMPOUND_STMT)
 	return node
 }
-func (node *CompoundStatement) stmtNode() {}
+func (node *CompoundStatement) stmtChildNode() {}

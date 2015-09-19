@@ -1,8 +1,8 @@
 package ast
 
-type SmallStatementNode interface {
+type SmallStatementChildNode interface {
 	Node
-	smallStmtNode()
+	smallStmtChildNode()
 }
 
 type SmallStatement struct {
@@ -15,7 +15,7 @@ func NewSmallStatement() *SmallStatement {
 	return node
 }
 
-func (node *SmallStatement) SetChild(n SmallStatementNode) { node.ParentNode.SetChild(n) }
+func (node *SmallStatement) SetChild(n SmallStatementChildNode) { node.ParentNode.SetChild(n) }
 
 type ExpressionStatement struct {
 	ParentNode
@@ -28,5 +28,5 @@ func NewExpressionStatement() *ExpressionStatement {
 	return node
 }
 
-func (node *ExpressionStatement) smallStmtNode()                     {}
+func (node *ExpressionStatement) smallStmtChildNode()                {}
 func (node *ExpressionStatement) SetChild(n *TestlistStarExpression) { node.ParentNode.SetChild(n) }

@@ -50,6 +50,12 @@ func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
 	return compoundStmt
 }
 
+// or_test: and_test ('or' and_test)*
+func (parser *Parser) parseOrTest() *ast.OrTest {
+	orTest := ast.NewOrTest()
+	return orTest
+}
+
 // test: or_test ['if' or_test 'else' test] | lambdef
 func (parser *Parser) parseTest() *ast.Test {
 	test := ast.NewTest()
@@ -60,7 +66,7 @@ func (parser *Parser) parseTest() *ast.Test {
 func (parser *Parser) parseTestlistStarExpression() *ast.TestlistStarExpression {
 	testlistStarExpression := ast.NewTestListStarExpression()
 
-	var expr ast.Node
+	var expr ast.TestlistStarExpressionChildNode
 	expr = parser.parseTest()
 	if expr == nil {
 		return nil
@@ -86,7 +92,7 @@ func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (parser *Parser) parseSmallStatment() *ast.SmallStatement {
 	smallStmt := ast.NewSmallStatement()
 
-	var stmt ast.SmallStatementNode
+	var stmt ast.SmallStatementChildNode
 	stmt = parser.parseExpressionStatement()
 	if stmt != nil {
 		smallStmt.SetChild(stmt)
@@ -124,7 +130,7 @@ func (parser *Parser) parseSimpleStatement() *ast.SimpleStatement {
 
 // stmt: simple_stmt | compound_stmt
 func (parser *Parser) parseStatement() *ast.Statement {
-	var next ast.StatementNode
+	var next ast.StatementChildNode
 	next = parser.parseSimpleStatement()
 	if next == nil {
 		next = parser.parseCompoundStatement()

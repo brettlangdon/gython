@@ -1,8 +1,8 @@
 package ast
 
-type TestNode interface {
+type TestChildNode interface {
 	Node
-	test()
+	testChild()
 }
 
 type Test struct {
@@ -15,4 +15,23 @@ func NewTest() *Test {
 	return node
 }
 
-func (node *Test) SetChild(n TestNode) { node.ParentNode.SetChild(n) }
+func (node *Test) testlistStarExpressionChild() {}
+func (node *Test) SetChild(n TestChildNode)     { node.ParentNode.SetChild(n) }
+
+type OrTestChildNode interface {
+	Node
+	orTestChild()
+}
+
+type OrTest struct {
+	ListNode
+}
+
+func NewOrTest() *OrTest {
+	node := &OrTest{}
+	node.initBaseNode(OR_TEST)
+	return node
+}
+
+func (node *OrTest) testChild()               {}
+func (node *OrTest) Append(n OrTestChildNode) { node.ListNode.Append(n) }
