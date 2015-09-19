@@ -1,8 +1,7 @@
 package ast
 
 type SimpleStatement struct {
-	BaseNode
-	Statements []*SmallStatement
+	ListNode
 }
 
 func NewSimpleStatement() *SimpleStatement {
@@ -13,6 +12,6 @@ func NewSimpleStatement() *SimpleStatement {
 
 func (node *SimpleStatement) StatementNode() {}
 
-func (node *SimpleStatement) AppendSmallStatement(n *SmallStatement) {
-	node.Statements = append(node.Statements, n)
+func (node *SimpleStatement) AppendNode(n *SmallStatement) {
+	node.ListNode.AppendNode(n)
 }

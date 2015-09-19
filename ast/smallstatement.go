@@ -1,6 +1,7 @@
 package ast
 
 type SmallStatementNode interface {
+	Node
 	SmallStatementNode()
 }
 
@@ -13,4 +14,10 @@ func NewSmallStatement() *SmallStatement {
 	node := &SmallStatement{}
 	node.initBaseNode(SMALL_STMT)
 	return node
+}
+
+func (node *SmallStatement) Repr() []interface{} {
+	out := node.BaseNode.Repr()
+	out = append(out, node.Statement.Repr())
+	return out
 }

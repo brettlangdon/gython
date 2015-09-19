@@ -50,10 +50,21 @@ func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
 	return compoundStmt
 }
 
+// testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+func (parser *Parser) parseTestlistStartExpr() *ast.TestlistStartExpr {
+	testlistStartExpr := ast.NewTestListStartExpr()
+	return testlistStartExpr
+}
+
 // expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
 //                      ('=' (yield_expr|testlist_star_expr))*)
 func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	exprStmt := ast.NewExpressionStatement()
+	testlistStartExpr := parser.parseTestlistStartExpr()
+	if testlistStartExpr == nil {
+		return nil
+	}
+	exprStmt.Expression = testlistStartExpr
 	return exprStmt
 }
 
@@ -82,19 +93,19 @@ func (parser *Parser) parseSimpleStatement() *ast.SimpleStatement {
 		if smallStmt == nil {
 			break
 		}
-		simpleStmt.AppendSmallStatement(smallStmt)
+		simpleStmt.AppendNode(smallStmt)
 		next := parser.nextToken()
 		if next.ID != token.SEMI {
 			parser.unreadToken(next)
 			break
 		}
 	}
+	parser.expect(token.NEWLINE)
+
 	// no small statements found
-	if len(simpleStmt.Statements) == 0 {
+	if simpleStmt.Length() == 0 {
 		return nil
 	}
-
-	parser.expect(token.NEWLINE)
 	return simpleStmt
 }
 

@@ -1,6 +1,7 @@
 package ast
 
 type StatementNode interface {
+	Node
 	StatementNode()
 }
 
@@ -16,3 +17,9 @@ func NewStatement() *Statement {
 }
 
 func (node *Statement) StatementNode() {}
+
+func (node *Statement) Repr() []interface{} {
+	out := node.BaseNode.Repr()
+	out = append(out, node.Statement.Repr())
+	return out
+}

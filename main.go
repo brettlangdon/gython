@@ -25,5 +25,5 @@ func tokenize() {
 func main() {
 	root, p := parser.ParseReader(os.Stdin)
 	fmt.Println(p)
-	fmt.Println(root)
+	fmt.Println(root.Repr())
 }
