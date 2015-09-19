@@ -62,3 +62,7 @@ const (
 	ERRORTOKEN
 	N_TOKENS
 )
+
+func (id TokenID) String() string {
+	return TokenNames[id]
+}
