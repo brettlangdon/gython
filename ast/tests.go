@@ -71,4 +71,5 @@ func NewNotTest() *NotTest {
 }
 
 func (node *NotTest) notTestChild()           {}
+func (node *NotTest) andTestChild()           {}
 func (node *NotTest) SetChild(n NotTestChild) { node.ParentNode.SetChild(n) }

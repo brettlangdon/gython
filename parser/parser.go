@@ -71,6 +71,24 @@ func (parser *Parser) parseNotTest() *ast.NotTest {
 // and_test: not_test ('and' not_test)*
 func (parser *Parser) parseAndTest() *ast.AndTest {
 	andTest := ast.NewAndTest()
+	notTest := parser.parseNotTest()
+	if notTest == nil {
+		return nil
+	}
+	andTest.Append(notTest)
+	for {
+		next := parser.nextToken()
+		if !next.IsLiteral("and") {
+			parser.unreadToken(next)
+			break
+		}
+		notTest = parser.parseNotTest()
+		if notTest == nil {
+			return nil
+		}
+		andTest.Append(notTest)
+	}
+
 	return andTest
 }
 
