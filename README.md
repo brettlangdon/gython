@@ -17,16 +17,35 @@ Currently there are a few small differences between the output format, but the t
 ### Parser
 Next up is going to be writing the parser to be able to generate an AST which will match the form provided from:
 ```python
-import ast
+import parser
 import pprint
+import symbol
+import token
+
+
+def resolve_symbol_names(part):
+    if not isinstance(part, list):
+        return part
+
+    if not len(part):
+        return part
+
+    symbol_id = part[0]
+    if symbol_id in symbol.sym_name:
+        symbol_name = symbol.sym_name[symbol_id]
+        return [symbol_name] + [resolve_symbol_names(p) for p in part[1:]]
+    elif symbol_id in token.tok_name:
+        token_name = token.tok_name[symbol_id]
+        return [token_name] + part[1:]
+    return part
 
 
 def main(filename):
     with open(filename, 'r') as fp:
         contents = fp.read()
-    root = ast.parse(contents, filename)
-    pprint.pprint(ast.dump(root, include_attributes=True))
-
+    st = parser.suite(contents)
+    ast = resolve_symbol_names(st.tolist())
+    pprint.pprint(ast)
 
 if __name__ == '__main__':
     import sys
@@ -35,6 +54,57 @@ if __name__ == '__main__':
 
 ```bash
 python3 parse.py <script.py>
+```
+
+```bash
+$ echo "print('hello world')" > test.py
+$ python3 parse.py test.py
+['file_input',
+ ['stmt',
+  ['simple_stmt',
+   ['small_stmt',
+    ['expr_stmt',
+     ['testlist_star_expr',
+      ['test',
+       ['or_test',
+        ['and_test',
+         ['not_test',
+          ['comparison',
+           ['expr',
+            ['xor_expr',
+             ['and_expr',
+              ['shift_expr',
+               ['arith_expr',
+                ['term',
+                 ['factor',
+                  ['power',
+                   ['atom_expr',
+                    ['atom', ['NAME', 'print']],
+                    ['trailer',
+                     ['LPAR', '('],
+                     ['arglist',
+                      ['argument',
+                       ['test',
+                        ['or_test',
+                         ['and_test',
+                          ['not_test',
+                           ['comparison',
+                            ['expr',
+                             ['xor_expr',
+                              ['and_expr',
+                               ['shift_expr',
+                                ['arith_expr',
+                                 ['term',
+                                  ['factor',
+                                   ['power',
+                                    ['atom_expr',
+                                     ['atom',
+                                      ['STRING',
+                                       "'hello world'"]]]]]]]]]]]]]]]]]],
+                     ['RPAR', ')']]]]]]]]]]]]]]]]]]],
+   ['NEWLINE', '']]],
+ ['NEWLINE', ''],
+ ['ENDMARKER', '']]
 ```
 
 ### Compiler
