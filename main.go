@@ -23,6 +23,7 @@ func tokenize() {
 }
 
 func main() {
-	root := parser.ParseReader(os.Stdin)
+	root, p := parser.ParseReader(os.Stdin)
+	fmt.Println(p)
 	fmt.Println(root)
 }
