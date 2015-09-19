@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/brettlangdon/gython/parser"
 	"github.com/brettlangdon/gython/scanner"
 	"github.com/brettlangdon/gython/token"
 )
 
-func main() {
+func tokenize() {
 	tokenizer := scanner.NewScanner(os.Stdin)
 	for {
 		tok := tokenizer.NextToken()
@@ -19,4 +20,9 @@ func main() {
 			break
 		}
 	}
+}
+
+func main() {
+	root := parser.ParseReader(os.Stdin)
+	fmt.Println(root)
 }
