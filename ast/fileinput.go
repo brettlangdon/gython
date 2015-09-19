@@ -1,19 +1,28 @@
 package ast
 
+import "github.com/brettlangdon/gython/token"
+
 type FileInput struct {
-	ListNode
+	BaseNode
+	children []interface{}
 }
 
 func NewFileInput() *FileInput {
-	node := &FileInput{}
-	node.initChildren()
+	node := &FileInput{
+		children: make([]interface{}, 0),
+	}
+	node.initBaseNode(FILE_INPUT)
 	return node
 }
 
-func (node *FileInput) ID() NodeID {
-	return FILE_INPUT
+func (node *FileInput) AppendToken(t *token.Token) {
+	node.children = append(node.children, t)
 }
 
-func (node *FileInput) Name() string {
-	return NodeNames[FILE_INPUT]
+func (node *FileInput) AppendNode(n StatementNode) {
+	node.children = append(node.children, n)
+}
+
+func (node *FileInput) Children() []interface{} {
+	return node.children
 }
