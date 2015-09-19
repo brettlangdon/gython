@@ -36,12 +36,24 @@ func (parser *Parser) addError(msg string) {
 	})
 }
 
-func (parser *Parser) expect(tokID token.TokenID) {
+func (parser *Parser) expect(tokID token.TokenID) bool {
 	next := parser.nextToken()
 	if next.ID != tokID {
 		msg := "Unexpected token \"" + next.ID.String() + "\" expected \"" + tokID.String() + "\""
 		parser.addError(msg)
+		return false
 	}
+	return true
+}
+
+func (parser *Parser) expectLiteral(literal string) bool {
+	next := parser.nextToken()
+	if next.ID != token.NAME || next.Literal != literal {
+		msg := "Unexpected literal \"" + next.Literal + "\" expected \"" + literal + "\""
+		parser.addError(msg)
+		return false
+	}
+	return true
 }
 
 // compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
@@ -50,15 +62,62 @@ func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
 	return compoundStmt
 }
 
+// and_test: not_test ('and' not_test)*
+func (parser *Parser) parseAndTest() *ast.AndTest {
+	andTest := ast.NewAndTest()
+	return andTest
+}
+
 // or_test: and_test ('or' and_test)*
 func (parser *Parser) parseOrTest() *ast.OrTest {
 	orTest := ast.NewOrTest()
+	andTest := parser.parseAndTest()
+	if andTest == nil {
+		return nil
+	}
+	orTest.Append(andTest)
+	for {
+		next := parser.nextToken()
+		if next.ID != token.NAME || next.Literal != "and" {
+			parser.unreadToken(next)
+			break
+		}
+		andTest = parser.parseAndTest()
+		if andTest == nil {
+			return nil
+		}
+		orTest.Append(andTest)
+	}
 	return orTest
 }
 
 // test: or_test ['if' or_test 'else' test] | lambdef
 func (parser *Parser) parseTest() *ast.Test {
 	test := ast.NewTest()
+
+	orTest := parser.parseOrTest()
+	if orTest != nil {
+		test.Append(orTest)
+		next := parser.nextToken()
+		// Do not use `parser.expectLiteral`, this next part is optional
+		if next.ID == token.NAME && next.Literal == "if" {
+			orTest = parser.parseOrTest()
+			if orTest != nil {
+				test.Append(orTest)
+				if parser.expectLiteral("else") {
+					elseTest := parser.parseTest()
+					if elseTest == nil {
+						return nil
+					}
+					test.Append(test)
+				}
+			}
+		} else {
+			parser.unreadToken(next)
+		}
+	} else {
+		// TODO: parser.parseLambDef()
+	}
 	return test
 }
 

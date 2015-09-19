@@ -6,7 +6,7 @@ type TestChildNode interface {
 }
 
 type Test struct {
-	ParentNode
+	ListNode
 }
 
 func NewTest() *Test {
@@ -16,7 +16,8 @@ func NewTest() *Test {
 }
 
 func (node *Test) testlistStarExpressionChild() {}
-func (node *Test) SetChild(n TestChildNode)     { node.ParentNode.SetChild(n) }
+func (node *Test) testChild()                   {}
+func (node *Test) Append(n TestChildNode)       { node.ListNode.Append(n) }
 
 type OrTestChildNode interface {
 	Node
@@ -35,3 +36,21 @@ func NewOrTest() *OrTest {
 
 func (node *OrTest) testChild()               {}
 func (node *OrTest) Append(n OrTestChildNode) { node.ListNode.Append(n) }
+
+type AndTestChildNode interface {
+	Node
+	andTestChild()
+}
+
+type AndTest struct {
+	ListNode
+}
+
+func NewAndTest() *AndTest {
+	node := &AndTest{}
+	node.initBaseNode(AND_TEST)
+	return node
+}
+
+func (node *AndTest) orTestChild()              {}
+func (node *AndTest) Append(n AndTestChildNode) { node.ListNode.Append(n) }
