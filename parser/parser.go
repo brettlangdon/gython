@@ -62,6 +62,12 @@ func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
 	return compoundStmt
 }
 
+// not_test: 'not' not_test | comparison
+func (parser *Parser) parseNotTest() *ast.NotTest {
+	notTest := ast.NewNotTest()
+	return notTest
+}
+
 // and_test: not_test ('and' not_test)*
 func (parser *Parser) parseAndTest() *ast.AndTest {
 	andTest := ast.NewAndTest()

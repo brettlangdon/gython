@@ -54,3 +54,21 @@ func NewAndTest() *AndTest {
 
 func (node *AndTest) orTestChild()              {}
 func (node *AndTest) Append(n AndTestChildNode) { node.ListNode.Append(n) }
+
+type NotTestChild interface {
+	Node
+	notTestChild()
+}
+
+type NotTest struct {
+	ParentNode
+}
+
+func NewNotTest() *NotTest {
+	node := &NotTest{}
+	node.initBaseNode(NOT_TEST)
+	return node
+}
+
+func (node *NotTest) notTestChild()           {}
+func (node *NotTest) SetChild(n NotTestChild) { node.ParentNode.SetChild(n) }
