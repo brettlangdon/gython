@@ -21,7 +21,9 @@ func (node *TokenNode) atomExpressionChild()      {}
 func (node *TokenNode) comparisonChild()          {}
 func (node *TokenNode) expressionStatementChild() {}
 func (node *TokenNode) factorChild()              {}
+func (node *TokenNode) fileInputChild()           {}
 func (node *TokenNode) shiftExpressionChild()     {}
+func (node *TokenNode) simpleStatementChild()     {}
 func (node *TokenNode) trailerChild()             {}
 func (node *TokenNode) Name() string              { return token.TokenNames[node.Token.ID] }
 func (node *TokenNode) Repr() []interface{} {

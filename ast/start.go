@@ -1,5 +1,10 @@
 package ast
 
+type FileInputChildNode interface {
+	Node
+	fileInputChild()
+}
+
 type FileInput struct {
 	ListNode
 }
@@ -11,4 +16,4 @@ func NewFileInput() *FileInput {
 	return node
 }
 
-func (node *FileInput) Append(n *Statement) { node.ListNode.Append(n) }
+func (node *FileInput) Append(n FileInputChildNode) { node.ListNode.Append(n) }

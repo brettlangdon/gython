@@ -557,7 +557,12 @@ func (parser *Parser) parseSimpleStatement() *ast.SimpleStatement {
 			break
 		}
 	}
-	parser.expect(token.NEWLINE)
+	next := parser.nextToken()
+	if next.ID != token.NEWLINE {
+		parser.addError("Expected \"NEWLINE\" instead found \"" + next.ID.String() + "\"")
+		return nil
+	}
+	simpleStmt.Append(ast.NewTokenNode(next))
 
 	// no small statements found
 	if simpleStmt.Length() == 0 {
@@ -589,8 +594,7 @@ func (parser *Parser) parseFileInput() *ast.FileInput {
 	for parser.tokenizer.State() == errorcode.E_OK {
 		next := parser.nextToken()
 		if next.ID == token.NEWLINE {
-			// root.Append(ast.NewTokenNode(next))
-			continue
+			root.Append(ast.NewTokenNode(next))
 		} else if next.ID == token.ENDMARKER {
 			// Unread, so we can read in the expected value later
 			parser.unreadToken(next)
@@ -602,11 +606,15 @@ func (parser *Parser) parseFileInput() *ast.FileInput {
 				break
 			}
 			root.Append(stmt)
-			break
 		}
 	}
 
-	parser.expect(token.ENDMARKER)
+	next := parser.nextToken()
+	if next.ID != token.ENDMARKER {
+		parser.addError("Expected \"ENDMARKER\" instead received \"" + next.ID.String() + "\"")
+		return nil
+	}
+	root.Append(ast.NewTokenNode(next))
 
 	return root
 }
