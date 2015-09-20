@@ -62,9 +62,149 @@ func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
 	return compoundStmt
 }
 
+// shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+func (parser *Parser) parseShiftExpression() *ast.ShiftExpression {
+	expr := ast.NewShiftExpression()
+	return expr
+}
+
+// and_expr: shift_expr ('&' shift_expr)*
+func (parser *Parser) parseAndExpression() *ast.AndExpression {
+	expr := ast.NewAndExpression()
+	shiftExpr := parser.parseShiftExpression()
+	if shiftExpr == nil {
+		return nil
+	}
+	expr.Append(shiftExpr)
+	for {
+		next := parser.nextToken()
+		if next.ID != token.AMPER {
+			parser.unreadToken(next)
+			break
+		}
+		shiftExpr := parser.parseShiftExpression()
+		if shiftExpr == nil {
+			return nil
+		}
+		expr.Append(shiftExpr)
+	}
+	return expr
+}
+
+// xor_expr: and_expr ('^' and_expr)*
+func (parser *Parser) parseXorExpression() *ast.XorExpression {
+	expr := ast.NewXorExpression()
+	andExpr := parser.parseAndExpression()
+	if andExpr == nil {
+		return nil
+	}
+	expr.Append(andExpr)
+	for {
+		next := parser.nextToken()
+		if next.ID != token.CIRCUMFLEX {
+			parser.unreadToken(next)
+			break
+		}
+		andExpr := parser.parseAndExpression()
+		if andExpr == nil {
+			return nil
+		}
+		expr.Append(andExpr)
+	}
+	return expr
+}
+
+// expr: xor_expr ('|' xor_expr)*
+func (parser *Parser) parseExpression() *ast.Expression {
+	expr := ast.NewExpression()
+	xorExpr := parser.parseXorExpression()
+	if xorExpr == nil {
+		return nil
+	}
+	expr.Append(xorExpr)
+	for {
+		next := parser.nextToken()
+		if next.ID != token.VBAR {
+			parser.unreadToken(next)
+			break
+		}
+		xorExpr := parser.parseXorExpression()
+		if xorExpr == nil {
+			return nil
+		}
+		expr.Append(xorExpr)
+	}
+	return expr
+}
+
+// comparison: expr (comp_op expr)*
+func (parser *Parser) parseComparison() *ast.Comparison {
+	comparison := ast.NewComparison()
+	expr := parser.parseExpression()
+	if expr == nil {
+		return nil
+	}
+	comparison.Append(expr)
+
+	for {
+		// comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+		compOp := true
+		next := parser.nextToken()
+		switch next.Literal {
+		case "<", ">", "==", ">=", "<=", "<>", "!=", "in":
+			comparison.Append(ast.NewTokenNode(next))
+		case "is":
+			comparison.Append(ast.NewTokenNode(next))
+			next2 := parser.nextToken()
+			if next2.Literal == "not" {
+				comparison.Append(ast.NewTokenNode(next2))
+			} else {
+				parser.unreadToken(next2)
+			}
+		case "not":
+			next2 := parser.nextToken()
+			if next2.Literal == "in" {
+				comparison.Append(ast.NewTokenNode(next))
+				comparison.Append(ast.NewTokenNode(next2))
+			} else {
+				parser.unreadToken(next2)
+				parser.unreadToken(next)
+				compOp = false
+			}
+		default:
+			parser.unreadToken(next)
+			compOp = false
+		}
+		if compOp == false {
+			break
+		}
+		expr := parser.parseExpression()
+		if expr == nil {
+			return nil
+		}
+		comparison.Append(expr)
+	}
+
+	return comparison
+}
+
 // not_test: 'not' not_test | comparison
 func (parser *Parser) parseNotTest() *ast.NotTest {
 	notTest := ast.NewNotTest()
+	next := parser.nextToken()
+	if next.IsLiteral("not") {
+		test := parser.parseNotTest()
+		if test == nil {
+			return nil
+		}
+		notTest.SetChild(test)
+	} else {
+		comparison := parser.parseComparison()
+		if comparison == nil {
+			return nil
+		}
+		notTest.SetChild(comparison)
+	}
 	return notTest
 }
 

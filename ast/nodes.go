@@ -16,7 +16,8 @@ func NewTokenNode(tok *token.Token) *TokenNode {
 		Token: tok,
 	}
 }
-func (node *TokenNode) Name() string { return token.TokenNames[node.Token.ID] }
+func (node *TokenNode) comparisonChild() {}
+func (node *TokenNode) Name() string     { return token.TokenNames[node.Token.ID] }
 func (node *TokenNode) Repr() []interface{} {
 	parts := make([]interface{}, 0)
 	parts = append(parts, node.Name())
