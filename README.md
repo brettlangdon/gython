@@ -14,8 +14,8 @@ So far I have a mostly working scanner/tokenizer. The main goal was to be able t
 Currently there are a few small differences between the output format, but the tokens being produced are the same.
 
 
-### Parser
-Next up is going to be writing the parser to be able to generate an AST which will match the form provided from:
+### Grammar Parser
+Next up is going to be writing the parser to be able to validate the source code grammar; which will match the form provided from:
 ```python
 import parser
 import pprint
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 ```
 
 ```bash
-python3 parse.py <script.py>
+python3 grammar.py <script.py>
 ```
 
 ```bash
@@ -105,6 +105,32 @@ $ python3 parse.py test.py
    ['NEWLINE', '']]],
  ['NEWLINE', ''],
  ['ENDMARKER', '']]
+```
+
+### AST Parsing
+AST parsing will take the validated source grammar and convert it into a valid AST.
+
+The goal is to get a similar AST output as the following:
+
+```python
+import ast
+
+
+def main(filename):
+    with open(filename, 'r') as fp:
+        contents = fp.read()
+    module = ast.parse(contents)
+    print(ast.dump(module))
+
+if __name__ == '__main__':
+    import sys
+    main(sys.argv[1])
+```
+
+```bash
+$ echo "print('hello world')" > test.py
+$ python3 parser.py test.py
+Module(body=[Expr(value=Call(func=Name(id='print', ctx=Load()), args=[Str(s='hello world')], keywords=[]))])
 ```
 
 ### Compiler
