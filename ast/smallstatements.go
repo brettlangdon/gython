@@ -2,7 +2,7 @@ package ast
 
 type SmallStatementChildNode interface {
 	Node
-	smallStmtChildNode()
+	smallStmtChild()
 }
 
 type SmallStatement struct {
@@ -17,16 +17,22 @@ func NewSmallStatement() *SmallStatement {
 
 func (node *SmallStatement) SetChild(n SmallStatementChildNode) { node.ParentNode.SetChild(n) }
 
+type ExpressionStatementChildNode interface {
+	Node
+	expressionStatementChild()
+}
+
 type ExpressionStatement struct {
-	ParentNode
+	ListNode
 	Expression *TestlistStarExpression
 }
 
 func NewExpressionStatement() *ExpressionStatement {
 	node := &ExpressionStatement{}
 	node.initBaseNode(EXPR_STMT)
+	node.initListNode()
 	return node
 }
 
-func (node *ExpressionStatement) smallStmtChildNode()                {}
-func (node *ExpressionStatement) SetChild(n *TestlistStarExpression) { node.ParentNode.SetChild(n) }
+func (node *ExpressionStatement) smallStmtChild()                       {}
+func (node *ExpressionStatement) Append(n ExpressionStatementChildNode) { node.ListNode.Append(n) }

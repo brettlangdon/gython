@@ -16,8 +16,14 @@ func NewTokenNode(tok *token.Token) *TokenNode {
 		Token: tok,
 	}
 }
-func (node *TokenNode) comparisonChild() {}
-func (node *TokenNode) Name() string     { return token.TokenNames[node.Token.ID] }
+func (node *TokenNode) atomChild()                {}
+func (node *TokenNode) atomExpressionChild()      {}
+func (node *TokenNode) comparisonChild()          {}
+func (node *TokenNode) expressionStatementChild() {}
+func (node *TokenNode) factorChild()              {}
+func (node *TokenNode) shiftExpressionChild()     {}
+func (node *TokenNode) trailerChild()             {}
+func (node *TokenNode) Name() string              { return token.TokenNames[node.Token.ID] }
 func (node *TokenNode) Repr() []interface{} {
 	parts := make([]interface{}, 0)
 	parts = append(parts, node.Name())
