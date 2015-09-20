@@ -1,6 +1,10 @@
 package ast
 
-import "github.com/brettlangdon/gython/token"
+import (
+	"fmt"
+
+	"github.com/brettlangdon/gython/token"
+)
 
 type Node interface {
 	Name() string
@@ -29,7 +33,8 @@ func (node *TokenNode) Name() string              { return token.TokenNames[node
 func (node *TokenNode) Repr() []interface{} {
 	parts := make([]interface{}, 0)
 	parts = append(parts, node.Name())
-	return append(parts, node.Token.Literal)
+	literal := fmt.Sprintf("%#v", node.Token.Literal)
+	return append(parts, literal)
 }
 
 type BaseNode struct {
