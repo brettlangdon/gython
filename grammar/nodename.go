@@ -1,4 +1,4 @@
-package ast
+package grammar
 
 var NodeNames = [...]string{
 	SINGLE_INPUT:       "SINGLE_INPUT",

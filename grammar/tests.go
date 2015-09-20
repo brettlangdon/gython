@@ -1,4 +1,4 @@
-package ast
+package grammar
 
 type TestChildNode interface {
 	Node

@@ -3,8 +3,8 @@ package parser
 import (
 	"io"
 
-	"github.com/brettlangdon/gython/ast"
 	"github.com/brettlangdon/gython/errorcode"
+	"github.com/brettlangdon/gython/grammar"
 	"github.com/brettlangdon/gython/scanner"
 	"github.com/brettlangdon/gython/token"
 )
@@ -57,8 +57,8 @@ func (parser *Parser) expectLiteral(literal string) bool {
 }
 
 // compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
-func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
-	compoundStmt := ast.NewCompoundStatement()
+func (parser *Parser) parseCompoundStatement() *grammar.CompoundStatement {
+	compoundStmt := grammar.NewCompoundStatement()
 	return compoundStmt
 }
 
@@ -66,29 +66,29 @@ func (parser *Parser) parseCompoundStatement() *ast.CompoundStatement {
 //        '[' [testlist_comp] ']' |
 //        '{' [dictorsetmaker] '}' |
 //        NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
-func (parser *Parser) parseAtom() *ast.Atom {
-	atom := ast.NewAtom()
+func (parser *Parser) parseAtom() *grammar.Atom {
+	atom := grammar.NewAtom()
 	next := parser.nextToken()
 	switch next.ID {
 	case token.NAME, token.NUMBER, token.ELLIPSIS:
-		atom.Append(ast.NewTokenNode(next))
+		atom.Append(grammar.NewTokenNode(next))
 	case token.STRING:
-		atom.Append(ast.NewTokenNode(next))
+		atom.Append(grammar.NewTokenNode(next))
 		for {
 			next := parser.nextToken()
 			if next.ID != token.STRING {
 				parser.unreadToken(next)
 				break
 			}
-			atom.Append(ast.NewTokenNode(next))
+			atom.Append(grammar.NewTokenNode(next))
 		}
 	}
 	return atom
 }
 
 // trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
-func (parser *Parser) parseTrailer() *ast.Trailer {
-	trailer := ast.NewTrailer()
+func (parser *Parser) parseTrailer() *grammar.Trailer {
+	trailer := grammar.NewTrailer()
 	next := parser.nextToken()
 	switch next.ID {
 	case token.LPAR:
@@ -96,20 +96,20 @@ func (parser *Parser) parseTrailer() *ast.Trailer {
 		if next2.ID != token.RPAR {
 			return nil
 		}
-		trailer.Append(ast.NewTokenNode(next))
-		trailer.Append(ast.NewTokenNode(next2))
+		trailer.Append(grammar.NewTokenNode(next))
+		trailer.Append(grammar.NewTokenNode(next2))
 	case token.LBRACE:
 		next2 := parser.nextToken()
 		if next2.ID != token.RBRACE {
 			return nil
 		}
-		trailer.Append(ast.NewTokenNode(next))
-		trailer.Append(ast.NewTokenNode(next2))
+		trailer.Append(grammar.NewTokenNode(next))
+		trailer.Append(grammar.NewTokenNode(next2))
 	case token.DOT:
 		next2 := parser.nextToken()
 		if next2.ID == token.NAME {
-			trailer.Append(ast.NewTokenNode(next))
-			trailer.Append(ast.NewTokenNode(next2))
+			trailer.Append(grammar.NewTokenNode(next))
+			trailer.Append(grammar.NewTokenNode(next2))
 		} else {
 			parser.addError("Expected \"NAME\" instead found \"" + next.ID.String() + "\"")
 			return nil
@@ -122,11 +122,11 @@ func (parser *Parser) parseTrailer() *ast.Trailer {
 }
 
 // atom_expr: [AWAIT] atom trailer*
-func (parser *Parser) parseAtomExpression() *ast.AtomExpression {
-	expr := ast.NewAtomExpression()
+func (parser *Parser) parseAtomExpression() *grammar.AtomExpression {
+	expr := grammar.NewAtomExpression()
 	next := parser.nextToken()
 	if next.ID == token.AWAIT {
-		expr.Append(ast.NewTokenNode(next))
+		expr.Append(grammar.NewTokenNode(next))
 	} else {
 		parser.unreadToken(next)
 	}
@@ -148,8 +148,8 @@ func (parser *Parser) parseAtomExpression() *ast.AtomExpression {
 }
 
 // power: atom_expr ['**' factor]
-func (parser *Parser) parsePower() *ast.Power {
-	power := ast.NewPower()
+func (parser *Parser) parsePower() *grammar.Power {
+	power := grammar.NewPower()
 	atomExpr := parser.parseAtomExpression()
 	if atomExpr == nil {
 		return nil
@@ -171,8 +171,8 @@ func (parser *Parser) parsePower() *ast.Power {
 }
 
 // factor: ('+'|'-'|'~') factor | power
-func (parser *Parser) parseFactor() *ast.Factor {
-	factor := ast.NewFactor()
+func (parser *Parser) parseFactor() *grammar.Factor {
+	factor := grammar.NewFactor()
 	next := parser.nextToken()
 	switch next.ID {
 	case token.PLUS, token.MINUS, token.TILDE:
@@ -180,7 +180,7 @@ func (parser *Parser) parseFactor() *ast.Factor {
 		if node == nil {
 			return nil
 		}
-		factor.Append(ast.NewTokenNode(next))
+		factor.Append(grammar.NewTokenNode(next))
 		factor.Append(node)
 	default:
 		parser.unreadToken(next)
@@ -195,8 +195,8 @@ func (parser *Parser) parseFactor() *ast.Factor {
 }
 
 // term: factor (('*'|'@'|'/'|'%'|'//') factor)*
-func (parser *Parser) parseTerm() *ast.Term {
-	term := ast.NewTerm()
+func (parser *Parser) parseTerm() *grammar.Term {
+	term := grammar.NewTerm()
 	factor := parser.parseFactor()
 	if factor == nil {
 		return nil
@@ -218,8 +218,8 @@ func (parser *Parser) parseTerm() *ast.Term {
 }
 
 // arith_expr: term (('+'|'-') term)*
-func (parser *Parser) parseArithmetricExpression() *ast.ArithmeticExpression {
-	expr := ast.NewArithmeticExpression()
+func (parser *Parser) parseArithmetricExpression() *grammar.ArithmeticExpression {
+	expr := grammar.NewArithmeticExpression()
 	term := parser.parseTerm()
 	if term == nil {
 		return nil
@@ -241,8 +241,8 @@ func (parser *Parser) parseArithmetricExpression() *ast.ArithmeticExpression {
 }
 
 // shift_expr: arith_expr (('<<'|'>>') arith_expr)*
-func (parser *Parser) parseShiftExpression() *ast.ShiftExpression {
-	expr := ast.NewShiftExpression()
+func (parser *Parser) parseShiftExpression() *grammar.ShiftExpression {
+	expr := grammar.NewShiftExpression()
 	arithExpr := parser.parseArithmetricExpression()
 	if arithExpr == nil {
 		return nil
@@ -254,7 +254,7 @@ func (parser *Parser) parseShiftExpression() *ast.ShiftExpression {
 			parser.unreadToken(next)
 			break
 		}
-		expr.Append(ast.NewTokenNode(next))
+		expr.Append(grammar.NewTokenNode(next))
 		arithExpr := parser.parseArithmetricExpression()
 		if arithExpr == nil {
 			return nil
@@ -265,8 +265,8 @@ func (parser *Parser) parseShiftExpression() *ast.ShiftExpression {
 }
 
 // and_expr: shift_expr ('&' shift_expr)*
-func (parser *Parser) parseAndExpression() *ast.AndExpression {
-	expr := ast.NewAndExpression()
+func (parser *Parser) parseAndExpression() *grammar.AndExpression {
+	expr := grammar.NewAndExpression()
 	shiftExpr := parser.parseShiftExpression()
 	if shiftExpr == nil {
 		return nil
@@ -288,8 +288,8 @@ func (parser *Parser) parseAndExpression() *ast.AndExpression {
 }
 
 // xor_expr: and_expr ('^' and_expr)*
-func (parser *Parser) parseXorExpression() *ast.XorExpression {
-	expr := ast.NewXorExpression()
+func (parser *Parser) parseXorExpression() *grammar.XorExpression {
+	expr := grammar.NewXorExpression()
 	andExpr := parser.parseAndExpression()
 	if andExpr == nil {
 		return nil
@@ -311,8 +311,8 @@ func (parser *Parser) parseXorExpression() *ast.XorExpression {
 }
 
 // expr: xor_expr ('|' xor_expr)*
-func (parser *Parser) parseExpression() *ast.Expression {
-	expr := ast.NewExpression()
+func (parser *Parser) parseExpression() *grammar.Expression {
+	expr := grammar.NewExpression()
 	xorExpr := parser.parseXorExpression()
 	if xorExpr == nil {
 		return nil
@@ -334,8 +334,8 @@ func (parser *Parser) parseExpression() *ast.Expression {
 }
 
 // comparison: expr (comp_op expr)*
-func (parser *Parser) parseComparison() *ast.Comparison {
-	comparison := ast.NewComparison()
+func (parser *Parser) parseComparison() *grammar.Comparison {
+	comparison := grammar.NewComparison()
 	expr := parser.parseExpression()
 	if expr == nil {
 		return nil
@@ -348,20 +348,20 @@ func (parser *Parser) parseComparison() *ast.Comparison {
 		next := parser.nextToken()
 		switch next.Literal {
 		case "<", ">", "==", ">=", "<=", "<>", "!=", "in":
-			comparison.Append(ast.NewTokenNode(next))
+			comparison.Append(grammar.NewTokenNode(next))
 		case "is":
-			comparison.Append(ast.NewTokenNode(next))
+			comparison.Append(grammar.NewTokenNode(next))
 			next2 := parser.nextToken()
 			if next2.Literal == "not" {
-				comparison.Append(ast.NewTokenNode(next2))
+				comparison.Append(grammar.NewTokenNode(next2))
 			} else {
 				parser.unreadToken(next2)
 			}
 		case "not":
 			next2 := parser.nextToken()
 			if next2.Literal == "in" {
-				comparison.Append(ast.NewTokenNode(next))
-				comparison.Append(ast.NewTokenNode(next2))
+				comparison.Append(grammar.NewTokenNode(next))
+				comparison.Append(grammar.NewTokenNode(next2))
 			} else {
 				parser.unreadToken(next2)
 				parser.unreadToken(next)
@@ -385,8 +385,8 @@ func (parser *Parser) parseComparison() *ast.Comparison {
 }
 
 // not_test: 'not' not_test | comparison
-func (parser *Parser) parseNotTest() *ast.NotTest {
-	notTest := ast.NewNotTest()
+func (parser *Parser) parseNotTest() *grammar.NotTest {
+	notTest := grammar.NewNotTest()
 	next := parser.nextToken()
 	if next.IsLiteral("not") {
 		test := parser.parseNotTest()
@@ -406,8 +406,8 @@ func (parser *Parser) parseNotTest() *ast.NotTest {
 }
 
 // and_test: not_test ('and' not_test)*
-func (parser *Parser) parseAndTest() *ast.AndTest {
-	andTest := ast.NewAndTest()
+func (parser *Parser) parseAndTest() *grammar.AndTest {
+	andTest := grammar.NewAndTest()
 	notTest := parser.parseNotTest()
 	if notTest == nil {
 		return nil
@@ -430,8 +430,8 @@ func (parser *Parser) parseAndTest() *ast.AndTest {
 }
 
 // or_test: and_test ('or' and_test)*
-func (parser *Parser) parseOrTest() *ast.OrTest {
-	orTest := ast.NewOrTest()
+func (parser *Parser) parseOrTest() *grammar.OrTest {
+	orTest := grammar.NewOrTest()
 	andTest := parser.parseAndTest()
 	if andTest == nil {
 		return nil
@@ -453,8 +453,8 @@ func (parser *Parser) parseOrTest() *ast.OrTest {
 }
 
 // test: or_test ['if' or_test 'else' test] | lambdef
-func (parser *Parser) parseTest() *ast.Test {
-	test := ast.NewTest()
+func (parser *Parser) parseTest() *grammar.Test {
+	test := grammar.NewTest()
 
 	orTest := parser.parseOrTest()
 	if orTest != nil {
@@ -483,10 +483,10 @@ func (parser *Parser) parseTest() *ast.Test {
 }
 
 // testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
-func (parser *Parser) parseTestlistStarExpression() *ast.TestlistStarExpression {
-	testlistStarExpression := ast.NewTestListStarExpression()
+func (parser *Parser) parseTestlistStarExpression() *grammar.TestlistStarExpression {
+	testlistStarExpression := grammar.NewTestListStarExpression()
 
-	var expr ast.TestlistStarExpressionChildNode
+	var expr grammar.TestlistStarExpressionChildNode
 	expr = parser.parseTest()
 	if expr == nil {
 		return nil
@@ -497,8 +497,8 @@ func (parser *Parser) parseTestlistStarExpression() *ast.TestlistStarExpression 
 
 // expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
 //                      ('=' (yield_expr|testlist_star_expr))*)
-func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	exprStmt := ast.NewExpressionStatement()
+func (parser *Parser) parseExpressionStatement() *grammar.ExpressionStatement {
+	exprStmt := grammar.NewExpressionStatement()
 	expr := parser.parseTestlistStarExpression()
 	if expr == nil {
 		return nil
@@ -513,7 +513,7 @@ func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 				parser.unreadToken(next)
 				break
 			}
-			exprStmt.Append(ast.NewTokenNode(next))
+			exprStmt.Append(grammar.NewTokenNode(next))
 			expr := parser.parseTestlistStarExpression()
 			if expr == nil {
 				return nil
@@ -527,10 +527,10 @@ func (parser *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 
 // small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
 //              import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
-func (parser *Parser) parseSmallStatment() *ast.SmallStatement {
-	smallStmt := ast.NewSmallStatement()
+func (parser *Parser) parseSmallStatment() *grammar.SmallStatement {
+	smallStmt := grammar.NewSmallStatement()
 
-	var stmt ast.SmallStatementChildNode
+	var stmt grammar.SmallStatementChildNode
 	stmt = parser.parseExpressionStatement()
 	if stmt != nil {
 		smallStmt.SetChild(stmt)
@@ -543,8 +543,8 @@ func (parser *Parser) parseSmallStatment() *ast.SmallStatement {
 }
 
 // simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
-func (parser *Parser) parseSimpleStatement() *ast.SimpleStatement {
-	simpleStmt := ast.NewSimpleStatement()
+func (parser *Parser) parseSimpleStatement() *grammar.SimpleStatement {
+	simpleStmt := grammar.NewSimpleStatement()
 	for {
 		smallStmt := parser.parseSmallStatment()
 		if smallStmt == nil {
@@ -562,7 +562,7 @@ func (parser *Parser) parseSimpleStatement() *ast.SimpleStatement {
 		parser.addError("Expected \"NEWLINE\" instead found \"" + next.ID.String() + "\"")
 		return nil
 	}
-	simpleStmt.Append(ast.NewTokenNode(next))
+	simpleStmt.Append(grammar.NewTokenNode(next))
 
 	// no small statements found
 	if simpleStmt.Length() == 0 {
@@ -572,8 +572,8 @@ func (parser *Parser) parseSimpleStatement() *ast.SimpleStatement {
 }
 
 // stmt: simple_stmt | compound_stmt
-func (parser *Parser) parseStatement() *ast.Statement {
-	var next ast.StatementChildNode
+func (parser *Parser) parseStatement() *grammar.Statement {
+	var next grammar.StatementChildNode
 	next = parser.parseSimpleStatement()
 	if next == nil {
 		next = parser.parseCompoundStatement()
@@ -583,18 +583,18 @@ func (parser *Parser) parseStatement() *ast.Statement {
 		return nil
 	}
 
-	stmt := ast.NewStatement()
+	stmt := grammar.NewStatement()
 	stmt.SetChild(next)
 	return stmt
 }
 
 // file_input: (NEWLINE | stmt)* ENDMARKER
-func (parser *Parser) parseFileInput() *ast.FileInput {
-	root := ast.NewFileInput()
+func (parser *Parser) parseFileInput() *grammar.FileInput {
+	root := grammar.NewFileInput()
 	for parser.tokenizer.State() == errorcode.E_OK {
 		next := parser.nextToken()
 		if next.ID == token.NEWLINE {
-			root.Append(ast.NewTokenNode(next))
+			root.Append(grammar.NewTokenNode(next))
 		} else if next.ID == token.ENDMARKER {
 			// Unread, so we can read in the expected value later
 			parser.unreadToken(next)
@@ -614,12 +614,12 @@ func (parser *Parser) parseFileInput() *ast.FileInput {
 		parser.addError("Expected \"ENDMARKER\" instead received \"" + next.ID.String() + "\"")
 		return nil
 	}
-	root.Append(ast.NewTokenNode(next))
+	root.Append(grammar.NewTokenNode(next))
 
 	return root
 }
 
-func ParseReader(r io.Reader) (*ast.FileInput, *Parser) {
+func ParseGrammar(r io.Reader) (*grammar.FileInput, *Parser) {
 	parser := &Parser{
 		tokenizer:   scanner.NewScanner(r),
 		tokenBuffer: make([]*token.Token, 0),
