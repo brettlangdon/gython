@@ -1,19 +1,21 @@
 package grammar
 
-type FileInputChildNode interface {
-	Node
+import "github.com/brettlangdon/gython/symbol"
+
+type FileInputChild interface {
+	Rule
 	fileInputChild()
 }
 
 type FileInput struct {
-	ListNode
+	ListRule
 }
 
 func NewFileInput() *FileInput {
-	node := &FileInput{}
-	node.initBaseNode(FILE_INPUT)
-	node.initListNode()
-	return node
+	rule := &FileInput{}
+	rule.initBaseRule(symbol.FILE_INPUT)
+	rule.initListRule()
+	return rule
 }
 
-func (node *FileInput) Append(n FileInputChildNode) { node.ListNode.Append(n) }
+func (rule *FileInput) Append(n FileInputChild) { rule.ListRule.Append(n) }

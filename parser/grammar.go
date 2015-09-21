@@ -9,13 +9,13 @@ import (
 	"github.com/brettlangdon/gython/token"
 )
 
-type Parser struct {
+type GrammarParser struct {
 	Errors      []*Error
 	tokenizer   *scanner.Scanner
 	tokenBuffer []*token.Token
 }
 
-func (parser *Parser) nextToken() *token.Token {
+func (parser *GrammarParser) nextToken() *token.Token {
 	if len(parser.tokenBuffer) > 0 {
 		last := len(parser.tokenBuffer) - 1
 		next := parser.tokenBuffer[last]
@@ -26,17 +26,17 @@ func (parser *Parser) nextToken() *token.Token {
 	return parser.tokenizer.NextToken()
 }
 
-func (parser *Parser) unreadToken(tok *token.Token) {
+func (parser *GrammarParser) unreadToken(tok *token.Token) {
 	parser.tokenBuffer = append(parser.tokenBuffer, tok)
 }
 
-func (parser *Parser) addError(msg string) {
+func (parser *GrammarParser) addError(msg string) {
 	parser.Errors = append(parser.Errors, &Error{
 		Message: msg,
 	})
 }
 
-func (parser *Parser) expect(tokID token.TokenID) bool {
+func (parser *GrammarParser) expect(tokID token.TokenID) bool {
 	next := parser.nextToken()
 	if next.ID != tokID {
 		msg := "Unexpected token \"" + next.ID.String() + "\" expected \"" + tokID.String() + "\""
@@ -46,7 +46,7 @@ func (parser *Parser) expect(tokID token.TokenID) bool {
 	return true
 }
 
-func (parser *Parser) expectLiteral(literal string) bool {
+func (parser *GrammarParser) expectLiteral(literal string) bool {
 	next := parser.nextToken()
 	if !next.IsLiteral(literal) {
 		msg := "Unexpected literal \"" + next.Literal + "\" expected \"" + literal + "\""
@@ -57,7 +57,7 @@ func (parser *Parser) expectLiteral(literal string) bool {
 }
 
 // compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
-func (parser *Parser) parseCompoundStatement() *grammar.CompoundStatement {
+func (parser *GrammarParser) parseCompoundStatement() *grammar.CompoundStatement {
 	compoundStmt := grammar.NewCompoundStatement()
 	return compoundStmt
 }
@@ -66,28 +66,28 @@ func (parser *Parser) parseCompoundStatement() *grammar.CompoundStatement {
 //        '[' [testlist_comp] ']' |
 //        '{' [dictorsetmaker] '}' |
 //        NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
-func (parser *Parser) parseAtom() *grammar.Atom {
+func (parser *GrammarParser) parseAtom() *grammar.Atom {
 	atom := grammar.NewAtom()
 	next := parser.nextToken()
 	switch next.ID {
 	case token.NAME, token.NUMBER, token.ELLIPSIS:
-		atom.Append(grammar.NewTokenNode(next))
+		atom.Append(grammar.NewTokenRule(next))
 	case token.STRING:
-		atom.Append(grammar.NewTokenNode(next))
+		atom.Append(grammar.NewTokenRule(next))
 		for {
 			next := parser.nextToken()
 			if next.ID != token.STRING {
 				parser.unreadToken(next)
 				break
 			}
-			atom.Append(grammar.NewTokenNode(next))
+			atom.Append(grammar.NewTokenRule(next))
 		}
 	}
 	return atom
 }
 
 // trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
-func (parser *Parser) parseTrailer() *grammar.Trailer {
+func (parser *GrammarParser) parseTrailer() *grammar.Trailer {
 	trailer := grammar.NewTrailer()
 	next := parser.nextToken()
 	switch next.ID {
@@ -96,20 +96,20 @@ func (parser *Parser) parseTrailer() *grammar.Trailer {
 		if next2.ID != token.RPAR {
 			return nil
 		}
-		trailer.Append(grammar.NewTokenNode(next))
-		trailer.Append(grammar.NewTokenNode(next2))
+		trailer.Append(grammar.NewTokenRule(next))
+		trailer.Append(grammar.NewTokenRule(next2))
 	case token.LBRACE:
 		next2 := parser.nextToken()
 		if next2.ID != token.RBRACE {
 			return nil
 		}
-		trailer.Append(grammar.NewTokenNode(next))
-		trailer.Append(grammar.NewTokenNode(next2))
+		trailer.Append(grammar.NewTokenRule(next))
+		trailer.Append(grammar.NewTokenRule(next2))
 	case token.DOT:
 		next2 := parser.nextToken()
 		if next2.ID == token.NAME {
-			trailer.Append(grammar.NewTokenNode(next))
-			trailer.Append(grammar.NewTokenNode(next2))
+			trailer.Append(grammar.NewTokenRule(next))
+			trailer.Append(grammar.NewTokenRule(next2))
 		} else {
 			parser.addError("Expected \"NAME\" instead found \"" + next.ID.String() + "\"")
 			return nil
@@ -122,11 +122,11 @@ func (parser *Parser) parseTrailer() *grammar.Trailer {
 }
 
 // atom_expr: [AWAIT] atom trailer*
-func (parser *Parser) parseAtomExpression() *grammar.AtomExpression {
+func (parser *GrammarParser) parseAtomExpression() *grammar.AtomExpression {
 	expr := grammar.NewAtomExpression()
 	next := parser.nextToken()
 	if next.ID == token.AWAIT {
-		expr.Append(grammar.NewTokenNode(next))
+		expr.Append(grammar.NewTokenRule(next))
 	} else {
 		parser.unreadToken(next)
 	}
@@ -148,7 +148,7 @@ func (parser *Parser) parseAtomExpression() *grammar.AtomExpression {
 }
 
 // power: atom_expr ['**' factor]
-func (parser *Parser) parsePower() *grammar.Power {
+func (parser *GrammarParser) parsePower() *grammar.Power {
 	power := grammar.NewPower()
 	atomExpr := parser.parseAtomExpression()
 	if atomExpr == nil {
@@ -171,7 +171,7 @@ func (parser *Parser) parsePower() *grammar.Power {
 }
 
 // factor: ('+'|'-'|'~') factor | power
-func (parser *Parser) parseFactor() *grammar.Factor {
+func (parser *GrammarParser) parseFactor() *grammar.Factor {
 	factor := grammar.NewFactor()
 	next := parser.nextToken()
 	switch next.ID {
@@ -180,7 +180,7 @@ func (parser *Parser) parseFactor() *grammar.Factor {
 		if node == nil {
 			return nil
 		}
-		factor.Append(grammar.NewTokenNode(next))
+		factor.Append(grammar.NewTokenRule(next))
 		factor.Append(node)
 	default:
 		parser.unreadToken(next)
@@ -195,7 +195,7 @@ func (parser *Parser) parseFactor() *grammar.Factor {
 }
 
 // term: factor (('*'|'@'|'/'|'%'|'//') factor)*
-func (parser *Parser) parseTerm() *grammar.Term {
+func (parser *GrammarParser) parseTerm() *grammar.Term {
 	term := grammar.NewTerm()
 	factor := parser.parseFactor()
 	if factor == nil {
@@ -218,7 +218,7 @@ func (parser *Parser) parseTerm() *grammar.Term {
 }
 
 // arith_expr: term (('+'|'-') term)*
-func (parser *Parser) parseArithmetricExpression() *grammar.ArithmeticExpression {
+func (parser *GrammarParser) parseArithmetricExpression() *grammar.ArithmeticExpression {
 	expr := grammar.NewArithmeticExpression()
 	term := parser.parseTerm()
 	if term == nil {
@@ -241,7 +241,7 @@ func (parser *Parser) parseArithmetricExpression() *grammar.ArithmeticExpression
 }
 
 // shift_expr: arith_expr (('<<'|'>>') arith_expr)*
-func (parser *Parser) parseShiftExpression() *grammar.ShiftExpression {
+func (parser *GrammarParser) parseShiftExpression() *grammar.ShiftExpression {
 	expr := grammar.NewShiftExpression()
 	arithExpr := parser.parseArithmetricExpression()
 	if arithExpr == nil {
@@ -254,7 +254,7 @@ func (parser *Parser) parseShiftExpression() *grammar.ShiftExpression {
 			parser.unreadToken(next)
 			break
 		}
-		expr.Append(grammar.NewTokenNode(next))
+		expr.Append(grammar.NewTokenRule(next))
 		arithExpr := parser.parseArithmetricExpression()
 		if arithExpr == nil {
 			return nil
@@ -265,7 +265,7 @@ func (parser *Parser) parseShiftExpression() *grammar.ShiftExpression {
 }
 
 // and_expr: shift_expr ('&' shift_expr)*
-func (parser *Parser) parseAndExpression() *grammar.AndExpression {
+func (parser *GrammarParser) parseAndExpression() *grammar.AndExpression {
 	expr := grammar.NewAndExpression()
 	shiftExpr := parser.parseShiftExpression()
 	if shiftExpr == nil {
@@ -288,7 +288,7 @@ func (parser *Parser) parseAndExpression() *grammar.AndExpression {
 }
 
 // xor_expr: and_expr ('^' and_expr)*
-func (parser *Parser) parseXorExpression() *grammar.XorExpression {
+func (parser *GrammarParser) parseXorExpression() *grammar.XorExpression {
 	expr := grammar.NewXorExpression()
 	andExpr := parser.parseAndExpression()
 	if andExpr == nil {
@@ -311,7 +311,7 @@ func (parser *Parser) parseXorExpression() *grammar.XorExpression {
 }
 
 // expr: xor_expr ('|' xor_expr)*
-func (parser *Parser) parseExpression() *grammar.Expression {
+func (parser *GrammarParser) parseExpression() *grammar.Expression {
 	expr := grammar.NewExpression()
 	xorExpr := parser.parseXorExpression()
 	if xorExpr == nil {
@@ -334,7 +334,7 @@ func (parser *Parser) parseExpression() *grammar.Expression {
 }
 
 // comparison: expr (comp_op expr)*
-func (parser *Parser) parseComparison() *grammar.Comparison {
+func (parser *GrammarParser) parseComparison() *grammar.Comparison {
 	comparison := grammar.NewComparison()
 	expr := parser.parseExpression()
 	if expr == nil {
@@ -348,20 +348,20 @@ func (parser *Parser) parseComparison() *grammar.Comparison {
 		next := parser.nextToken()
 		switch next.Literal {
 		case "<", ">", "==", ">=", "<=", "<>", "!=", "in":
-			comparison.Append(grammar.NewTokenNode(next))
+			comparison.Append(grammar.NewTokenRule(next))
 		case "is":
-			comparison.Append(grammar.NewTokenNode(next))
+			comparison.Append(grammar.NewTokenRule(next))
 			next2 := parser.nextToken()
 			if next2.Literal == "not" {
-				comparison.Append(grammar.NewTokenNode(next2))
+				comparison.Append(grammar.NewTokenRule(next2))
 			} else {
 				parser.unreadToken(next2)
 			}
 		case "not":
 			next2 := parser.nextToken()
 			if next2.Literal == "in" {
-				comparison.Append(grammar.NewTokenNode(next))
-				comparison.Append(grammar.NewTokenNode(next2))
+				comparison.Append(grammar.NewTokenRule(next))
+				comparison.Append(grammar.NewTokenRule(next2))
 			} else {
 				parser.unreadToken(next2)
 				parser.unreadToken(next)
@@ -385,7 +385,7 @@ func (parser *Parser) parseComparison() *grammar.Comparison {
 }
 
 // not_test: 'not' not_test | comparison
-func (parser *Parser) parseNotTest() *grammar.NotTest {
+func (parser *GrammarParser) parseNotTest() *grammar.NotTest {
 	notTest := grammar.NewNotTest()
 	next := parser.nextToken()
 	if next.IsLiteral("not") {
@@ -406,7 +406,7 @@ func (parser *Parser) parseNotTest() *grammar.NotTest {
 }
 
 // and_test: not_test ('and' not_test)*
-func (parser *Parser) parseAndTest() *grammar.AndTest {
+func (parser *GrammarParser) parseAndTest() *grammar.AndTest {
 	andTest := grammar.NewAndTest()
 	notTest := parser.parseNotTest()
 	if notTest == nil {
@@ -430,7 +430,7 @@ func (parser *Parser) parseAndTest() *grammar.AndTest {
 }
 
 // or_test: and_test ('or' and_test)*
-func (parser *Parser) parseOrTest() *grammar.OrTest {
+func (parser *GrammarParser) parseOrTest() *grammar.OrTest {
 	orTest := grammar.NewOrTest()
 	andTest := parser.parseAndTest()
 	if andTest == nil {
@@ -453,7 +453,7 @@ func (parser *Parser) parseOrTest() *grammar.OrTest {
 }
 
 // test: or_test ['if' or_test 'else' test] | lambdef
-func (parser *Parser) parseTest() *grammar.Test {
+func (parser *GrammarParser) parseTest() *grammar.Test {
 	test := grammar.NewTest()
 
 	orTest := parser.parseOrTest()
@@ -483,10 +483,10 @@ func (parser *Parser) parseTest() *grammar.Test {
 }
 
 // testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
-func (parser *Parser) parseTestlistStarExpression() *grammar.TestlistStarExpression {
+func (parser *GrammarParser) parseTestlistStarExpression() *grammar.TestlistStarExpression {
 	testlistStarExpression := grammar.NewTestListStarExpression()
 
-	var expr grammar.TestlistStarExpressionChildNode
+	var expr grammar.TestlistStarExpressionChild
 	expr = parser.parseTest()
 	if expr == nil {
 		return nil
@@ -497,7 +497,7 @@ func (parser *Parser) parseTestlistStarExpression() *grammar.TestlistStarExpress
 
 // expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
 //                      ('=' (yield_expr|testlist_star_expr))*)
-func (parser *Parser) parseExpressionStatement() *grammar.ExpressionStatement {
+func (parser *GrammarParser) parseExpressionStatement() *grammar.ExpressionStatement {
 	exprStmt := grammar.NewExpressionStatement()
 	expr := parser.parseTestlistStarExpression()
 	if expr == nil {
@@ -513,7 +513,7 @@ func (parser *Parser) parseExpressionStatement() *grammar.ExpressionStatement {
 				parser.unreadToken(next)
 				break
 			}
-			exprStmt.Append(grammar.NewTokenNode(next))
+			exprStmt.Append(grammar.NewTokenRule(next))
 			expr := parser.parseTestlistStarExpression()
 			if expr == nil {
 				return nil
@@ -527,10 +527,10 @@ func (parser *Parser) parseExpressionStatement() *grammar.ExpressionStatement {
 
 // small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
 //              import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
-func (parser *Parser) parseSmallStatment() *grammar.SmallStatement {
+func (parser *GrammarParser) parseSmallStatment() *grammar.SmallStatement {
 	smallStmt := grammar.NewSmallStatement()
 
-	var stmt grammar.SmallStatementChildNode
+	var stmt grammar.SmallStatementChild
 	stmt = parser.parseExpressionStatement()
 	if stmt != nil {
 		smallStmt.SetChild(stmt)
@@ -543,7 +543,7 @@ func (parser *Parser) parseSmallStatment() *grammar.SmallStatement {
 }
 
 // simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
-func (parser *Parser) parseSimpleStatement() *grammar.SimpleStatement {
+func (parser *GrammarParser) parseSimpleStatement() *grammar.SimpleStatement {
 	simpleStmt := grammar.NewSimpleStatement()
 	for {
 		smallStmt := parser.parseSmallStatment()
@@ -562,7 +562,7 @@ func (parser *Parser) parseSimpleStatement() *grammar.SimpleStatement {
 		parser.addError("Expected \"NEWLINE\" instead found \"" + next.ID.String() + "\"")
 		return nil
 	}
-	simpleStmt.Append(grammar.NewTokenNode(next))
+	simpleStmt.Append(grammar.NewTokenRule(next))
 
 	// no small statements found
 	if simpleStmt.Length() == 0 {
@@ -572,8 +572,8 @@ func (parser *Parser) parseSimpleStatement() *grammar.SimpleStatement {
 }
 
 // stmt: simple_stmt | compound_stmt
-func (parser *Parser) parseStatement() *grammar.Statement {
-	var next grammar.StatementChildNode
+func (parser *GrammarParser) parseStatement() *grammar.Statement {
+	var next grammar.StatementChild
 	next = parser.parseSimpleStatement()
 	if next == nil {
 		next = parser.parseCompoundStatement()
@@ -589,12 +589,12 @@ func (parser *Parser) parseStatement() *grammar.Statement {
 }
 
 // file_input: (NEWLINE | stmt)* ENDMARKER
-func (parser *Parser) parseFileInput() *grammar.FileInput {
+func (parser *GrammarParser) parseFileInput() *grammar.FileInput {
 	root := grammar.NewFileInput()
 	for parser.tokenizer.State() == errorcode.E_OK {
 		next := parser.nextToken()
 		if next.ID == token.NEWLINE {
-			root.Append(grammar.NewTokenNode(next))
+			root.Append(grammar.NewTokenRule(next))
 		} else if next.ID == token.ENDMARKER {
 			// Unread, so we can read in the expected value later
 			parser.unreadToken(next)
@@ -614,16 +614,18 @@ func (parser *Parser) parseFileInput() *grammar.FileInput {
 		parser.addError("Expected \"ENDMARKER\" instead received \"" + next.ID.String() + "\"")
 		return nil
 	}
-	root.Append(grammar.NewTokenNode(next))
+	root.Append(grammar.NewTokenRule(next))
 
 	return root
 }
 
-func ParseGrammar(r io.Reader) (*grammar.FileInput, *Parser) {
-	parser := &Parser{
+func NewGrammarParser(r io.Reader) *GrammarParser {
+	return &GrammarParser{
 		tokenizer:   scanner.NewScanner(r),
 		tokenBuffer: make([]*token.Token, 0),
 	}
+}
 
-	return parser.parseFileInput(), parser
+func (parser *GrammarParser) Parse() *grammar.FileInput {
+	return parser.parseFileInput()
 }

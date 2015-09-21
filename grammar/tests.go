@@ -1,75 +1,77 @@
 package grammar
 
-type TestChildNode interface {
-	Node
+import "github.com/brettlangdon/gython/symbol"
+
+type TestChild interface {
+	Rule
 	testChild()
 }
 
 type Test struct {
-	ListNode
+	ListRule
 }
 
 func NewTest() *Test {
-	node := &Test{}
-	node.initBaseNode(TEST)
-	return node
+	rule := &Test{}
+	rule.initBaseRule(symbol.TEST)
+	return rule
 }
 
-func (node *Test) testlistStarExpressionChild() {}
-func (node *Test) testChild()                   {}
-func (node *Test) Append(n TestChildNode)       { node.ListNode.Append(n) }
+func (rule *Test) testlistStarExpressionChild() {}
+func (rule *Test) testChild()                   {}
+func (rule *Test) Append(n TestChild)           { rule.ListRule.Append(n) }
 
-type OrTestChildNode interface {
-	Node
+type OrTestChild interface {
+	Rule
 	orTestChild()
 }
 
 type OrTest struct {
-	ListNode
+	ListRule
 }
 
 func NewOrTest() *OrTest {
-	node := &OrTest{}
-	node.initBaseNode(OR_TEST)
-	return node
+	rule := &OrTest{}
+	rule.initBaseRule(symbol.OR_TEST)
+	return rule
 }
 
-func (node *OrTest) testChild()               {}
-func (node *OrTest) Append(n OrTestChildNode) { node.ListNode.Append(n) }
+func (rule *OrTest) testChild()           {}
+func (rule *OrTest) Append(n OrTestChild) { rule.ListRule.Append(n) }
 
-type AndTestChildNode interface {
-	Node
+type AndTestChild interface {
+	Rule
 	andTestChild()
 }
 
 type AndTest struct {
-	ListNode
+	ListRule
 }
 
 func NewAndTest() *AndTest {
-	node := &AndTest{}
-	node.initBaseNode(AND_TEST)
-	return node
+	rule := &AndTest{}
+	rule.initBaseRule(symbol.AND_TEST)
+	return rule
 }
 
-func (node *AndTest) orTestChild()              {}
-func (node *AndTest) Append(n AndTestChildNode) { node.ListNode.Append(n) }
+func (rule *AndTest) orTestChild()          {}
+func (rule *AndTest) Append(n AndTestChild) { rule.ListRule.Append(n) }
 
 type NotTestChild interface {
-	Node
+	Rule
 	notTestChild()
 }
 
 type NotTest struct {
-	ParentNode
+	ParentRule
 }
 
 func NewNotTest() *NotTest {
-	node := &NotTest{}
-	node.initBaseNode(NOT_TEST)
-	return node
+	rule := &NotTest{}
+	rule.initBaseRule(symbol.NOT_TEST)
+	return rule
 }
 
-func (node *NotTest) notTestChild()           {}
-func (node *NotTest) andTestChild()           {}
-func (node *NotTest) SetChild(n NotTestChild) { node.ParentNode.SetChild(n) }
+func (rule *NotTest) notTestChild()           {}
+func (rule *NotTest) andTestChild()           {}
+func (rule *NotTest) SetChild(n NotTestChild) { rule.ParentRule.SetChild(n) }

@@ -23,8 +23,9 @@ func tokenize() {
 }
 
 func parse() {
-	root, p := parser.ParseGrammar(os.Stdin)
-	fmt.Println(p)
+	gp := parser.NewGrammarParser(os.Stdin)
+	root := gp.Parse()
+	fmt.Println(gp)
 	fmt.Println(root.Repr())
 }
 
