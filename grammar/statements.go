@@ -12,13 +12,13 @@ type Statement struct {
 }
 
 func NewStatement() *Statement {
-	rule := &Statement{}
-	rule.initBaseNode(symbol.STMT)
-	return rule
+	node := &Statement{}
+	node.initBaseNode(symbol.STMT)
+	return node
 }
 
-func (rule *Statement) fileInputChild()           {}
-func (rule *Statement) SetChild(n StatementChild) { rule.ParentNode.SetChild(n) }
+func (node *Statement) fileInputChild()           {}
+func (node *Statement) SetChild(n StatementChild) { node.ParentNode.SetChild(n) }
 
 type SimpleStatementChild interface {
 	Node
@@ -30,25 +30,25 @@ type SimpleStatement struct {
 }
 
 func NewSimpleStatement() *SimpleStatement {
-	rule := &SimpleStatement{}
-	rule.initBaseNode(symbol.SIMPLE_STMT)
-	rule.initListNode()
-	return rule
+	node := &SimpleStatement{}
+	node.initBaseNode(symbol.SIMPLE_STMT)
+	node.initListNode()
+	return node
 }
 
-func (rule *SimpleStatement) stmtChild()                    {}
-func (rule *SimpleStatement) Append(n SimpleStatementChild) { rule.ListNode.Append(n) }
+func (node *SimpleStatement) stmtChild()                    {}
+func (node *SimpleStatement) Append(n SimpleStatementChild) { node.ListNode.Append(n) }
 
 type CompoundStatement struct {
 	BaseNode
 }
 
 func NewCompoundStatement() *CompoundStatement {
-	rule := &CompoundStatement{}
-	rule.initBaseNode(symbol.COMPOUND_STMT)
-	return rule
+	node := &CompoundStatement{}
+	node.initBaseNode(symbol.COMPOUND_STMT)
+	return node
 }
-func (rule *CompoundStatement) stmtChild() {}
+func (node *CompoundStatement) stmtChild() {}
 
 type SmallStatementChild interface {
 	Node
@@ -60,13 +60,13 @@ type SmallStatement struct {
 }
 
 func NewSmallStatement() *SmallStatement {
-	rule := &SmallStatement{}
-	rule.initBaseNode(symbol.SMALL_STMT)
-	return rule
+	node := &SmallStatement{}
+	node.initBaseNode(symbol.SMALL_STMT)
+	return node
 }
 
-func (rule *SmallStatement) simpleStatementChild()          {}
-func (rule *SmallStatement) SetChild(n SmallStatementChild) { rule.ParentNode.SetChild(n) }
+func (node *SmallStatement) simpleStatementChild()          {}
+func (node *SmallStatement) SetChild(n SmallStatementChild) { node.ParentNode.SetChild(n) }
 
 type ExpressionStatementChild interface {
 	Node
@@ -79,11 +79,11 @@ type ExpressionStatement struct {
 }
 
 func NewExpressionStatement() *ExpressionStatement {
-	rule := &ExpressionStatement{}
-	rule.initBaseNode(symbol.EXPR_STMT)
-	rule.initListNode()
-	return rule
+	node := &ExpressionStatement{}
+	node.initBaseNode(symbol.EXPR_STMT)
+	node.initListNode()
+	return node
 }
 
-func (rule *ExpressionStatement) smallStmtChild()                   {}
-func (rule *ExpressionStatement) Append(n ExpressionStatementChild) { rule.ListNode.Append(n) }
+func (node *ExpressionStatement) smallStmtChild()                   {}
+func (node *ExpressionStatement) Append(n ExpressionStatementChild) { node.ListNode.Append(n) }

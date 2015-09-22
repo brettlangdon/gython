@@ -12,10 +12,10 @@ type FileInput struct {
 }
 
 func NewFileInput() *FileInput {
-	rule := &FileInput{}
-	rule.initBaseNode(symbol.FILE_INPUT)
-	rule.initListNode()
-	return rule
+	node := &FileInput{}
+	node.initBaseNode(symbol.FILE_INPUT)
+	node.initListNode()
+	return node
 }
 
-func (rule *FileInput) Append(n FileInputChild) { rule.ListNode.Append(n) }
+func (node *FileInput) Append(n FileInputChild) { node.ListNode.Append(n) }

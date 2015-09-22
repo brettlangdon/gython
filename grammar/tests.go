@@ -12,14 +12,14 @@ type Test struct {
 }
 
 func NewTest() *Test {
-	rule := &Test{}
-	rule.initBaseNode(symbol.TEST)
-	return rule
+	node := &Test{}
+	node.initBaseNode(symbol.TEST)
+	return node
 }
 
-func (rule *Test) testlistStarExpressionChild() {}
-func (rule *Test) testChild()                   {}
-func (rule *Test) Append(n TestChild)           { rule.ListNode.Append(n) }
+func (node *Test) testlistStarExpressionChild() {}
+func (node *Test) testChild()                   {}
+func (node *Test) Append(n TestChild)           { node.ListNode.Append(n) }
 
 type OrTestChild interface {
 	Node
@@ -31,13 +31,13 @@ type OrTest struct {
 }
 
 func NewOrTest() *OrTest {
-	rule := &OrTest{}
-	rule.initBaseNode(symbol.OR_TEST)
-	return rule
+	node := &OrTest{}
+	node.initBaseNode(symbol.OR_TEST)
+	return node
 }
 
-func (rule *OrTest) testChild()           {}
-func (rule *OrTest) Append(n OrTestChild) { rule.ListNode.Append(n) }
+func (node *OrTest) testChild()           {}
+func (node *OrTest) Append(n OrTestChild) { node.ListNode.Append(n) }
 
 type AndTestChild interface {
 	Node
@@ -49,13 +49,13 @@ type AndTest struct {
 }
 
 func NewAndTest() *AndTest {
-	rule := &AndTest{}
-	rule.initBaseNode(symbol.AND_TEST)
-	return rule
+	node := &AndTest{}
+	node.initBaseNode(symbol.AND_TEST)
+	return node
 }
 
-func (rule *AndTest) orTestChild()          {}
-func (rule *AndTest) Append(n AndTestChild) { rule.ListNode.Append(n) }
+func (node *AndTest) orTestChild()          {}
+func (node *AndTest) Append(n AndTestChild) { node.ListNode.Append(n) }
 
 type NotTestChild interface {
 	Node
@@ -67,11 +67,11 @@ type NotTest struct {
 }
 
 func NewNotTest() *NotTest {
-	rule := &NotTest{}
-	rule.initBaseNode(symbol.NOT_TEST)
-	return rule
+	node := &NotTest{}
+	node.initBaseNode(symbol.NOT_TEST)
+	return node
 }
 
-func (rule *NotTest) notTestChild()           {}
-func (rule *NotTest) andTestChild()           {}
-func (rule *NotTest) SetChild(n NotTestChild) { rule.ParentNode.SetChild(n) }
+func (node *NotTest) notTestChild()           {}
+func (node *NotTest) andTestChild()           {}
+func (node *NotTest) SetChild(n NotTestChild) { node.ParentNode.SetChild(n) }

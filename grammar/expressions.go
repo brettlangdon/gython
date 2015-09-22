@@ -12,14 +12,14 @@ type TestlistStarExpression struct {
 }
 
 func NewTestListStarExpression() *TestlistStarExpression {
-	rule := &TestlistStarExpression{}
-	rule.initBaseNode(symbol.TESTLIST_STAR_EXPR)
-	return rule
+	node := &TestlistStarExpression{}
+	node.initBaseNode(symbol.TESTLIST_STAR_EXPR)
+	return node
 }
 
-func (rule *TestlistStarExpression) expressionStatementChild() {}
-func (rule *TestlistStarExpression) SetChild(n TestlistStarExpressionChild) {
-	rule.ParentNode.SetChild(n)
+func (node *TestlistStarExpression) expressionStatementChild() {}
+func (node *TestlistStarExpression) SetChild(n TestlistStarExpressionChild) {
+	node.ParentNode.SetChild(n)
 }
 
 type ComparisonChild interface {
@@ -32,14 +32,14 @@ type Comparison struct {
 }
 
 func NewComparison() *Comparison {
-	rule := &Comparison{}
-	rule.initBaseNode(symbol.COMPARISON)
-	rule.initListNode()
-	return rule
+	node := &Comparison{}
+	node.initBaseNode(symbol.COMPARISON)
+	node.initListNode()
+	return node
 }
 
-func (rule *Comparison) notTestChild()            {}
-func (rule *Comparison) Append(n ComparisonChild) { rule.ListNode.Append(n) }
+func (node *Comparison) notTestChild()            {}
+func (node *Comparison) Append(n ComparisonChild) { node.ListNode.Append(n) }
 
 type ExpressionChild interface {
 	Node
@@ -51,14 +51,14 @@ type Expression struct {
 }
 
 func NewExpression() *Expression {
-	rule := &Expression{}
-	rule.initBaseNode(symbol.EXPR)
-	rule.initListNode()
-	return rule
+	node := &Expression{}
+	node.initBaseNode(symbol.EXPR)
+	node.initListNode()
+	return node
 }
 
-func (rule *Expression) comparisonChild()         {}
-func (rule *Expression) Append(n ExpressionChild) { rule.ListNode.Append(n) }
+func (node *Expression) comparisonChild()         {}
+func (node *Expression) Append(n ExpressionChild) { node.ListNode.Append(n) }
 
 type XorExpressionChild interface {
 	Node
@@ -70,14 +70,14 @@ type XorExpression struct {
 }
 
 func NewXorExpression() *XorExpression {
-	rule := &XorExpression{}
-	rule.initBaseNode(symbol.XOR_EXPR)
-	rule.initListNode()
-	return rule
+	node := &XorExpression{}
+	node.initBaseNode(symbol.XOR_EXPR)
+	node.initListNode()
+	return node
 }
 
-func (rule *XorExpression) expressionChild()            {}
-func (rule *XorExpression) Append(n XorExpressionChild) { rule.ListNode.Append(n) }
+func (node *XorExpression) expressionChild()            {}
+func (node *XorExpression) Append(n XorExpressionChild) { node.ListNode.Append(n) }
 
 type AndExpressionChild interface {
 	Node
@@ -89,14 +89,14 @@ type AndExpression struct {
 }
 
 func NewAndExpression() *AndExpression {
-	rule := &AndExpression{}
-	rule.initBaseNode(symbol.AND_EXPR)
-	rule.initListNode()
-	return rule
+	node := &AndExpression{}
+	node.initBaseNode(symbol.AND_EXPR)
+	node.initListNode()
+	return node
 }
 
-func (rule *AndExpression) xorExpressionChild()         {}
-func (rule *AndExpression) Append(n AndExpressionChild) { rule.ListNode.Append(n) }
+func (node *AndExpression) xorExpressionChild()         {}
+func (node *AndExpression) Append(n AndExpressionChild) { node.ListNode.Append(n) }
 
 type ShiftExpressionChild interface {
 	Node
@@ -108,14 +108,14 @@ type ShiftExpression struct {
 }
 
 func NewShiftExpression() *ShiftExpression {
-	rule := &ShiftExpression{}
-	rule.initBaseNode(symbol.SHIFT_EXPR)
-	rule.initListNode()
-	return rule
+	node := &ShiftExpression{}
+	node.initBaseNode(symbol.SHIFT_EXPR)
+	node.initListNode()
+	return node
 }
 
-func (rule *ShiftExpression) andExpressionChild()           {}
-func (rule *ShiftExpression) Append(n ShiftExpressionChild) { rule.ListNode.Append(n) }
+func (node *ShiftExpression) andExpressionChild()           {}
+func (node *ShiftExpression) Append(n ShiftExpressionChild) { node.ListNode.Append(n) }
 
 type ArithmeticExpressionChild interface {
 	Node
@@ -127,14 +127,14 @@ type ArithmeticExpression struct {
 }
 
 func NewArithmeticExpression() *ArithmeticExpression {
-	rule := &ArithmeticExpression{}
-	rule.initBaseNode(symbol.ARITH_EXPR)
-	rule.initListNode()
-	return rule
+	node := &ArithmeticExpression{}
+	node.initBaseNode(symbol.ARITH_EXPR)
+	node.initListNode()
+	return node
 }
 
-func (rule *ArithmeticExpression) shiftExpressionChild()              {}
-func (rule *ArithmeticExpression) Append(n ArithmeticExpressionChild) { rule.ListNode.Append(n) }
+func (node *ArithmeticExpression) shiftExpressionChild()              {}
+func (node *ArithmeticExpression) Append(n ArithmeticExpressionChild) { node.ListNode.Append(n) }
 
 type TermChild interface {
 	Node
@@ -146,14 +146,14 @@ type Term struct {
 }
 
 func NewTerm() *Term {
-	rule := &Term{}
-	rule.initBaseNode(symbol.TERM)
-	rule.initListNode()
-	return rule
+	node := &Term{}
+	node.initBaseNode(symbol.TERM)
+	node.initListNode()
+	return node
 }
 
-func (rule *Term) arithmeticExpressionChild() {}
-func (rule *Term) Append(n TermChild)         { rule.ListNode.Append(n) }
+func (node *Term) arithmeticExpressionChild() {}
+func (node *Term) Append(n TermChild)         { node.ListNode.Append(n) }
 
 type FactorChild interface {
 	Node
@@ -165,16 +165,16 @@ type Factor struct {
 }
 
 func NewFactor() *Factor {
-	rule := &Factor{}
-	rule.initBaseNode(symbol.FACTOR)
-	rule.initListNode()
-	return rule
+	node := &Factor{}
+	node.initBaseNode(symbol.FACTOR)
+	node.initListNode()
+	return node
 }
 
-func (rule *Factor) factorChild()         {}
-func (rule *Factor) powerChild()          {}
-func (rule *Factor) termChild()           {}
-func (rule *Factor) Append(n FactorChild) { rule.ListNode.Append(n) }
+func (node *Factor) factorChild()         {}
+func (node *Factor) powerChild()          {}
+func (node *Factor) termChild()           {}
+func (node *Factor) Append(n FactorChild) { node.ListNode.Append(n) }
 
 type PowerChild interface {
 	Node
@@ -186,14 +186,14 @@ type Power struct {
 }
 
 func NewPower() *Power {
-	rule := &Power{}
-	rule.initBaseNode(symbol.POWER)
-	rule.initListNode()
-	return rule
+	node := &Power{}
+	node.initBaseNode(symbol.POWER)
+	node.initListNode()
+	return node
 }
 
-func (rule *Power) factorChild()        {}
-func (rule *Power) Append(n PowerChild) { rule.ListNode.Append(n) }
+func (node *Power) factorChild()        {}
+func (node *Power) Append(n PowerChild) { node.ListNode.Append(n) }
 
 type AtomExpressionChild interface {
 	Node
@@ -205,14 +205,14 @@ type AtomExpression struct {
 }
 
 func NewAtomExpression() *AtomExpression {
-	rule := &AtomExpression{}
-	rule.initBaseNode(symbol.ATOM_EXPR)
-	rule.initListNode()
-	return rule
+	node := &AtomExpression{}
+	node.initBaseNode(symbol.ATOM_EXPR)
+	node.initListNode()
+	return node
 }
 
-func (rule *AtomExpression) powerChild()                  {}
-func (rule *AtomExpression) Append(n AtomExpressionChild) { rule.ListNode.Append(n) }
+func (node *AtomExpression) powerChild()                  {}
+func (node *AtomExpression) Append(n AtomExpressionChild) { node.ListNode.Append(n) }
 
 type AtomChild interface {
 	Node
@@ -224,14 +224,14 @@ type Atom struct {
 }
 
 func NewAtom() *Atom {
-	rule := &Atom{}
-	rule.initBaseNode(symbol.ATOM)
-	rule.initListNode()
-	return rule
+	node := &Atom{}
+	node.initBaseNode(symbol.ATOM)
+	node.initListNode()
+	return node
 }
 
-func (rule *Atom) atomExpressionChild() {}
-func (rule *Atom) Append(n AtomChild)   { rule.ListNode.Append(n) }
+func (node *Atom) atomExpressionChild() {}
+func (node *Atom) Append(n AtomChild)   { node.ListNode.Append(n) }
 
 type TrailerChild interface {
 	Node
@@ -243,11 +243,11 @@ type Trailer struct {
 }
 
 func NewTrailer() *Trailer {
-	rule := &Trailer{}
-	rule.initBaseNode(symbol.TRAILER)
-	rule.initListNode()
-	return rule
+	node := &Trailer{}
+	node.initBaseNode(symbol.TRAILER)
+	node.initListNode()
+	return node
 }
 
-func (rule *Trailer) atomExpressionChild()  {}
-func (rule *Trailer) Append(n TrailerChild) { rule.ListNode.Append(n) }
+func (node *Trailer) atomExpressionChild()  {}
+func (node *Trailer) Append(n TrailerChild) { node.ListNode.Append(n) }

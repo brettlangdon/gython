@@ -21,20 +21,20 @@ func NewTokenNode(tok *token.Token) *TokenNode {
 		Token: tok,
 	}
 }
-func (rule *TokenNode) atomChild()                {}
-func (rule *TokenNode) atomExpressionChild()      {}
-func (rule *TokenNode) comparisonChild()          {}
-func (rule *TokenNode) expressionStatementChild() {}
-func (rule *TokenNode) factorChild()              {}
-func (rule *TokenNode) fileInputChild()           {}
-func (rule *TokenNode) shiftExpressionChild()     {}
-func (rule *TokenNode) simpleStatementChild()     {}
-func (rule *TokenNode) trailerChild()             {}
-func (rule *TokenNode) Name() string              { return token.TokenNames[rule.Token.ID] }
-func (rule *TokenNode) Repr() []interface{} {
+func (node *TokenNode) atomChild()                {}
+func (node *TokenNode) atomExpressionChild()      {}
+func (node *TokenNode) comparisonChild()          {}
+func (node *TokenNode) expressionStatementChild() {}
+func (node *TokenNode) factorChild()              {}
+func (node *TokenNode) fileInputChild()           {}
+func (node *TokenNode) shiftExpressionChild()     {}
+func (node *TokenNode) simpleStatementChild()     {}
+func (node *TokenNode) trailerChild()             {}
+func (node *TokenNode) Name() string              { return token.TokenNames[node.Token.ID] }
+func (node *TokenNode) Repr() []interface{} {
 	parts := make([]interface{}, 0)
-	parts = append(parts, rule.Name())
-	literal := fmt.Sprintf("%#v", rule.Token.Literal)
+	parts = append(parts, node.Name())
+	literal := fmt.Sprintf("%#v", node.Token.Literal)
 	return append(parts, literal)
 }
 
@@ -43,20 +43,20 @@ type BaseNode struct {
 	child Node
 }
 
-func (rule *BaseNode) initBaseNode(id symbol.SymbolID) { rule.ID = id }
-func (rule *BaseNode) Name() string                    { return symbol.SymbolNames[rule.ID] }
-func (rule *BaseNode) Repr() (parts []interface{})     { return append(parts, rule.Name()) }
+func (node *BaseNode) initBaseNode(id symbol.SymbolID) { node.ID = id }
+func (node *BaseNode) Name() string                    { return symbol.SymbolNames[node.ID] }
+func (node *BaseNode) Repr() (parts []interface{})     { return append(parts, node.Name()) }
 
 type ParentNode struct {
 	BaseNode
 	child Node
 }
 
-func (rule *ParentNode) SetChild(n Node) { rule.child = n }
-func (rule *ParentNode) Child() Node     { return rule.child }
-func (rule *ParentNode) Repr() (parts []interface{}) {
-	parts = rule.BaseNode.Repr()
-	child := rule.Child()
+func (node *ParentNode) SetChild(n Node) { node.child = n }
+func (node *ParentNode) Child() Node     { return node.child }
+func (node *ParentNode) Repr() (parts []interface{}) {
+	parts = node.BaseNode.Repr()
+	child := node.Child()
 	if child != nil {
 		parts = append(parts, child.Repr())
 	}
@@ -68,13 +68,13 @@ type ListNode struct {
 	children []Node
 }
 
-func (rule *ListNode) initListNode()    { rule.children = make([]Node, 0) }
-func (rule *ListNode) Length() int      { return len(rule.children) }
-func (rule *ListNode) Children() []Node { return rule.children }
-func (rule *ListNode) Append(n Node)    { rule.children = append(rule.children, n) }
-func (rule *ListNode) Repr() (parts []interface{}) {
-	parts = rule.BaseNode.Repr()
-	children := rule.Children()
+func (node *ListNode) initListNode()    { node.children = make([]Node, 0) }
+func (node *ListNode) Length() int      { return len(node.children) }
+func (node *ListNode) Children() []Node { return node.children }
+func (node *ListNode) Append(n Node)    { node.children = append(node.children, n) }
+func (node *ListNode) Repr() (parts []interface{}) {
+	parts = node.BaseNode.Repr()
+	children := node.Children()
 	for _, child := range children {
 		parts = append(parts, child.Repr())
 	}
