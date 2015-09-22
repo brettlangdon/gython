@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/brettlangdon/gython/parser"
+	"github.com/brettlangdon/gython/grammar"
 	"github.com/brettlangdon/gython/scanner"
 	"github.com/brettlangdon/gython/token"
 )
@@ -22,13 +22,14 @@ func tokenize() {
 	}
 }
 
-func parse() {
-	gp := parser.NewGrammarParser(os.Stdin)
+func parseGrammar() {
+	tokenizer := scanner.NewScanner(os.Stdin)
+	gp := grammar.NewGrammarParser(tokenizer)
 	root := gp.Parse()
 	fmt.Println(gp)
 	fmt.Println(root.Repr())
 }
 
 func main() {
-	parse()
+	parseGrammar()
 }

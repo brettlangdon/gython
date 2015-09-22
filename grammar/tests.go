@@ -3,75 +3,75 @@ package grammar
 import "github.com/brettlangdon/gython/symbol"
 
 type TestChild interface {
-	Rule
+	Node
 	testChild()
 }
 
 type Test struct {
-	ListRule
+	ListNode
 }
 
 func NewTest() *Test {
 	rule := &Test{}
-	rule.initBaseRule(symbol.TEST)
+	rule.initBaseNode(symbol.TEST)
 	return rule
 }
 
 func (rule *Test) testlistStarExpressionChild() {}
 func (rule *Test) testChild()                   {}
-func (rule *Test) Append(n TestChild)           { rule.ListRule.Append(n) }
+func (rule *Test) Append(n TestChild)           { rule.ListNode.Append(n) }
 
 type OrTestChild interface {
-	Rule
+	Node
 	orTestChild()
 }
 
 type OrTest struct {
-	ListRule
+	ListNode
 }
 
 func NewOrTest() *OrTest {
 	rule := &OrTest{}
-	rule.initBaseRule(symbol.OR_TEST)
+	rule.initBaseNode(symbol.OR_TEST)
 	return rule
 }
 
 func (rule *OrTest) testChild()           {}
-func (rule *OrTest) Append(n OrTestChild) { rule.ListRule.Append(n) }
+func (rule *OrTest) Append(n OrTestChild) { rule.ListNode.Append(n) }
 
 type AndTestChild interface {
-	Rule
+	Node
 	andTestChild()
 }
 
 type AndTest struct {
-	ListRule
+	ListNode
 }
 
 func NewAndTest() *AndTest {
 	rule := &AndTest{}
-	rule.initBaseRule(symbol.AND_TEST)
+	rule.initBaseNode(symbol.AND_TEST)
 	return rule
 }
 
 func (rule *AndTest) orTestChild()          {}
-func (rule *AndTest) Append(n AndTestChild) { rule.ListRule.Append(n) }
+func (rule *AndTest) Append(n AndTestChild) { rule.ListNode.Append(n) }
 
 type NotTestChild interface {
-	Rule
+	Node
 	notTestChild()
 }
 
 type NotTest struct {
-	ParentRule
+	ParentNode
 }
 
 func NewNotTest() *NotTest {
 	rule := &NotTest{}
-	rule.initBaseRule(symbol.NOT_TEST)
+	rule.initBaseNode(symbol.NOT_TEST)
 	return rule
 }
 
 func (rule *NotTest) notTestChild()           {}
 func (rule *NotTest) andTestChild()           {}
-func (rule *NotTest) SetChild(n NotTestChild) { rule.ParentRule.SetChild(n) }
+func (rule *NotTest) SetChild(n NotTestChild) { rule.ParentNode.SetChild(n) }

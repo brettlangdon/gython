@@ -1,4 +1,4 @@
-package parser
+package error
 
 type Error struct {
 	Message string
