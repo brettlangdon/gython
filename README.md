@@ -108,7 +108,7 @@ $ python3 parse.py test.py
 ```
 
 ### AST Parsing
-AST parsing will take the validated source grammar and convert it into a valid AST.
+AST parsing will take the validated source grammar and convert it into a valid language AST.
 
 The goal is to get a similar AST output as the following:
 
