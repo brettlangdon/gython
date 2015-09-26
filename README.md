@@ -134,7 +134,18 @@ Module(body=[Expr(value=Call(func=Name(id='print', ctx=Load()), args=[Str(s='hel
 ```
 
 ### Compiler
-The compiler will be up after the parser. The compiler will be responsible for converting the parsed AST into Python bytecode.
+The purpose of the compiler is to convert an AST into the appropriate Python bytecode.
+
+The goal is to be able to produce a similar output as running:
+
+```bash
+$ echo "print('hello world')" > test.py
+$ python3 -m dis test.py
+  1           0 LOAD_CONST               0 (5)
+              3 STORE_NAME               0 (num)
+              6 LOAD_CONST               1 (None)
+              9 RETURN_VALUE
+```
 
 ### Interpreter
 The interpreter will be up after the compiler and will be able to execute on Python bytecode.
