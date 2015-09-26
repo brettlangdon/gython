@@ -391,14 +391,14 @@ func (parser *GrammarParser) parseNotTest() *NotTest {
 		if test == nil {
 			return nil
 		}
-		notTest.SetChild(test)
+		notTest.Append(test)
 	} else {
 		parser.unreadToken(next)
 		comparison := parser.parseComparison()
 		if comparison == nil {
 			return nil
 		}
-		notTest.SetChild(comparison)
+		notTest.Append(comparison)
 	}
 	return notTest
 }
@@ -489,7 +489,7 @@ func (parser *GrammarParser) parseTestlistStarExpression() *TestlistStarExpressi
 	if expr == nil {
 		return nil
 	}
-	testlistStarExpression.SetChild(expr)
+	testlistStarExpression.Append(expr)
 	return testlistStarExpression
 }
 

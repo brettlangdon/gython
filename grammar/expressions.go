@@ -8,18 +8,19 @@ type TestlistStarExpressionChild interface {
 }
 
 type TestlistStarExpression struct {
-	ParentNode
+	ListNode
 }
 
 func NewTestListStarExpression() *TestlistStarExpression {
 	node := &TestlistStarExpression{}
 	node.initBaseNode(symbol.TESTLIST_STAR_EXPR)
+	node.initListNode()
 	return node
 }
 
 func (node *TestlistStarExpression) expressionStatementChild() {}
-func (node *TestlistStarExpression) SetChild(n TestlistStarExpressionChild) {
-	node.ParentNode.SetChild(n)
+func (node *TestlistStarExpression) Append(n TestlistStarExpressionChild) {
+	node.ListNode.Append(n)
 }
 
 type ComparisonChild interface {

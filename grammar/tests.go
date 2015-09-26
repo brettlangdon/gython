@@ -63,7 +63,7 @@ type NotTestChild interface {
 }
 
 type NotTest struct {
-	ParentNode
+	ListNode
 }
 
 func NewNotTest() *NotTest {
@@ -72,6 +72,6 @@ func NewNotTest() *NotTest {
 	return node
 }
 
-func (node *NotTest) notTestChild()           {}
-func (node *NotTest) andTestChild()           {}
-func (node *NotTest) SetChild(n NotTestChild) { node.ParentNode.SetChild(n) }
+func (node *NotTest) notTestChild()         {}
+func (node *NotTest) andTestChild()         {}
+func (node *NotTest) Append(n NotTestChild) { node.ListNode.Append(n) }

@@ -8,6 +8,7 @@ import (
 )
 
 type Node interface {
+	ID() symbol.SymbolID
 	Name() string
 	Repr() []interface{}
 }
@@ -30,6 +31,7 @@ func (node *TokenNode) fileInputChild()           {}
 func (node *TokenNode) shiftExpressionChild()     {}
 func (node *TokenNode) simpleStatementChild()     {}
 func (node *TokenNode) trailerChild()             {}
+func (node *TokenNode) ID() symbol.SymbolID       { return 0 }
 func (node *TokenNode) Name() string              { return token.TokenNames[node.Token.ID] }
 func (node *TokenNode) Repr() []interface{} {
 	parts := make([]interface{}, 0)
@@ -39,12 +41,13 @@ func (node *TokenNode) Repr() []interface{} {
 }
 
 type BaseNode struct {
-	ID    symbol.SymbolID
+	id    symbol.SymbolID
 	child Node
 }
 
-func (node *BaseNode) initBaseNode(id symbol.SymbolID) { node.ID = id }
-func (node *BaseNode) Name() string                    { return symbol.SymbolNames[node.ID] }
+func (node *BaseNode) initBaseNode(id symbol.SymbolID) { node.id = id }
+func (node *BaseNode) ID() symbol.SymbolID             { return node.id }
+func (node *BaseNode) Name() string                    { return symbol.SymbolNames[node.ID()] }
 func (node *BaseNode) Repr() (parts []interface{})     { return append(parts, node.Name()) }
 
 type ParentNode struct {
