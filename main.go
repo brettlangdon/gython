@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/brettlangdon/gython/ast"
 	"github.com/brettlangdon/gython/grammar"
 	"github.com/brettlangdon/gython/scanner"
 	"github.com/brettlangdon/gython/token"
@@ -22,14 +23,23 @@ func tokenize() {
 	}
 }
 
-func parseGrammar() {
+func parseGrammar() *grammar.FileInput {
 	tokenizer := scanner.NewScanner(os.Stdin)
 	gp := grammar.NewGrammarParser(tokenizer)
-	root := gp.Parse()
-	fmt.Println(gp)
-	fmt.Println(root.Repr())
+	return gp.Parse()
+}
+
+func parseAST() {
+	start := parseGrammar()
+	mod, err := ast.ASTFromGrammar(start)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(mod)
 }
 
 func main() {
-	parseGrammar()
+	// start := parseGrammar()
+	// fmt.Println(start.Repr())
+	parseAST()
 }
