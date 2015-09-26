@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/brettlangdon/gython/ast"
+	"github.com/brettlangdon/gython/compiler"
 	"github.com/brettlangdon/gython/grammar"
 	"github.com/brettlangdon/gython/scanner"
 	"github.com/brettlangdon/gython/token"
@@ -29,17 +30,25 @@ func parseGrammar() *grammar.FileInput {
 	return gp.Parse()
 }
 
-func parseAST() {
+func parseAST() ast.Mod {
 	start := parseGrammar()
 	mod, err := ast.ASTFromGrammar(start)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(mod)
+	return mod
+}
+
+func compile() {
+	root := parseAST()
+	codeobject := compiler.CompileAST(root)
+	fmt.Println(codeobject)
 }
 
 func main() {
 	// start := parseGrammar()
 	// fmt.Println(start.Repr())
-	parseAST()
+	// root := parseAST()
+	// fmt.Println(root)
+	compile()
 }
