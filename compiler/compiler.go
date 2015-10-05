@@ -5,6 +5,7 @@ import (
 
 	"github.com/brettlangdon/gython/ast"
 	"github.com/brettlangdon/gython/bytecode"
+	"github.com/brettlangdon/gython/gython"
 )
 
 type Compiler struct {
@@ -42,13 +43,13 @@ func (compiler *Compiler) exitScope() *Scope {
 	return scope
 }
 
-func (compiler *Compiler) assemble(addNone bool) *bytecode.CodeObject {
+func (compiler *Compiler) assemble(addNone bool) *gython.CodeObject {
 	if addNone {
 		compiler.addOp(bytecode.LOAD_CONST)
 		compiler.addOp(bytecode.RETURN_VALUE)
 	}
 
-	codeobject := bytecode.NewCodeObject()
+	codeobject := gython.NewCodeObject()
 	return codeobject
 }
 
@@ -93,10 +94,10 @@ func (compiler *Compiler) compileBody(stmts []ast.Statement) bool {
 	return true
 }
 
-func (compiler *Compiler) CompileMod(root ast.Mod) *bytecode.CodeObject {
+func (compiler *Compiler) CompileMod(root ast.Mod) *gython.CodeObject {
 	addNone := true
 	compiler.enterScope()
-	var codeobject *bytecode.CodeObject
+	var codeobject *gython.CodeObject
 	switch root := root.(type) {
 	case *ast.Module:
 		if !compiler.compileBody(root.Body) {

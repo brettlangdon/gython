@@ -1,4 +1,4 @@
-package bytecode
+package gython
 
 type CodeObject struct {
 }
