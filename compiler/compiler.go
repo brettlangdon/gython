@@ -49,7 +49,7 @@ func (compiler *Compiler) assemble(addNone bool) *gython.CodeObject {
 		compiler.addOp(bytecode.RETURN_VALUE)
 	}
 
-	codeobject := gython.NewCodeObject()
+	codeobject := gython.NewCodeObject([]byte{}, []byte{}, 0)
 	return codeobject
 }
 
