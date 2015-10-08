@@ -9,29 +9,24 @@ import (
 )
 
 type Compiler struct {
-	nestLevel  int
-	scopeStack []*Scope
+	nestLevel    int
+	currentScope *Scope
+	scopeStack   []*Scope
 }
 
 func NewCompiler() *Compiler {
 	return &Compiler{
-		nestLevel:  0,
-		scopeStack: make([]*Scope, 0),
+		nestLevel:    0,
+		currentScope: nil,
+		scopeStack:   make([]*Scope, 0),
 	}
-}
-
-func (compiler *Compiler) currentScope() *Scope {
-	length := len(compiler.scopeStack)
-	if length > 0 {
-		return compiler.scopeStack[length-1]
-	}
-	return nil
 }
 
 func (compiler *Compiler) enterScope() *Scope {
 	scope := NewScope()
 	compiler.scopeStack = append(compiler.scopeStack, scope)
 	compiler.nestLevel++
+	compiler.currentScope = scope
 	return scope
 }
 
@@ -39,6 +34,11 @@ func (compiler *Compiler) exitScope() *Scope {
 	last := len(compiler.scopeStack) - 1
 	scope := compiler.scopeStack[last]
 	compiler.scopeStack = compiler.scopeStack[:last]
+	if last > 0 {
+		compiler.currentScope = compiler.scopeStack[last-1]
+	} else {
+		compiler.currentScope = nil
+	}
 	compiler.nestLevel--
 	return scope
 }
