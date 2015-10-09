@@ -45,25 +45,28 @@ func (compiler *Compiler) exitScope() *Scope {
 
 func (compiler *Compiler) assemble(addNone bool) *gython.CodeObject {
 	if addNone {
-		compiler.addOp(bytecode.LOAD_CONST)
-		compiler.addOp(bytecode.RETURN_VALUE)
+		// compiler.addOp(bytecode.LOAD_CONST)
+		// compiler.addOp(bytecode.RETURN_VALUE)
 	}
 
 	codeobject := gython.NewCodeObject([]byte{}, []byte{}, 0)
 	return codeobject
 }
 
-func (compiler *Compiler) addOp(op bytecode.Opcode) bool {
-	fmt.Println(bytecode.Opnames[op])
+func (compiler *Compiler) addOp(op bytecode.Opcode, value gython.Object) bool {
+	// TODO: add `value` object and get oparg
+	oparg := 0
+	instr := NewInstruction(op, oparg, true)
+	compiler.currentScope.AddInstruction(instr)
 	return true
 }
 
 func (compiler *Compiler) visitExpression(expr ast.Expression) bool {
 	switch expr := expr.(type) {
 	case *ast.Num:
-		compiler.addOp(bytecode.LOAD_CONST)
+		compiler.addOp(bytecode.LOAD_CONST, expr.Value)
 	case *ast.Name:
-		compiler.addOp(bytecode.STORE_NAME)
+		compiler.addOp(bytecode.STORE_NAME, expr.Identifier)
 	default:
 		fmt.Println(expr)
 	}
@@ -78,7 +81,7 @@ func (compiler *Compiler) visitStatement(stmt ast.Statement) bool {
 		length := len(stmt.Targets)
 		for i := 0; i < length; i++ {
 			if i < length-1 {
-				compiler.addOp(bytecode.DUP_TOP)
+				// compiler.addOp(bytecode.DUP_TOP)
 			}
 			compiler.visitExpression(stmt.Targets[i])
 		}

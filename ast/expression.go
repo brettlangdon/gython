@@ -1,6 +1,10 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/brettlangdon/gython/gython"
+)
 
 type Expression interface {
 	Node
@@ -8,13 +12,13 @@ type Expression interface {
 }
 
 type Name struct {
-	Identifier string
+	Identifier *gython.Unicode
 	Context    ExpressionContext
 }
 
 func NewName(id string, ctx ExpressionContext) *Name {
 	return &Name{
-		Identifier: id,
+		Identifier: gython.NewUnicode([]byte(id)),
 		Context:    ctx,
 	}
 }
@@ -26,12 +30,12 @@ func (name *Name) String() string {
 }
 
 type Num struct {
-	Value int64
+	Value *gython.Float
 }
 
 func NewNum(i int64) *Num {
 	return &Num{
-		Value: i,
+		Value: gython.NewFloat(float64(i)),
 	}
 }
 
