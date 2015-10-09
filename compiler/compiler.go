@@ -45,28 +45,32 @@ func (compiler *Compiler) exitScope() *Scope {
 
 func (compiler *Compiler) assemble(addNone bool) *gython.CodeObject {
 	if addNone {
-		// compiler.addOp(bytecode.LOAD_CONST)
-		// compiler.addOp(bytecode.RETURN_VALUE)
+		compiler.addOpWithObject(bytecode.LOAD_CONST, gython.None, compiler.currentScope.Constants)
+		compiler.addOp(bytecode.RETURN_VALUE)
 	}
 
 	codeobject := gython.NewCodeObject([]byte{}, []byte{}, 0)
 	return codeobject
 }
 
-func (compiler *Compiler) addOp(op bytecode.Opcode, value gython.Object) bool {
-	// TODO: add `value` object and get oparg
-	oparg := 0
+func (compiler *Compiler) addOp(op bytecode.Opcode) {
+	instr := NewInstruction(op, nil, false)
+	compiler.currentScope.AddInstruction(instr)
+}
+
+func (compiler *Compiler) addOpWithObject(op bytecode.Opcode, value gython.Object, args *gython.Dict) {
+	oparg := args.Length()
+	args.SetItem(oparg, value)
 	instr := NewInstruction(op, oparg, true)
 	compiler.currentScope.AddInstruction(instr)
-	return true
 }
 
 func (compiler *Compiler) visitExpression(expr ast.Expression) bool {
 	switch expr := expr.(type) {
 	case *ast.Num:
-		compiler.addOp(bytecode.LOAD_CONST, expr.Value)
+		compiler.addOpWithObject(bytecode.LOAD_CONST, expr.Value, compiler.currentScope.Constants)
 	case *ast.Name:
-		compiler.addOp(bytecode.STORE_NAME, expr.Identifier)
+		compiler.addOpWithObject(bytecode.STORE_NAME, expr.Identifier, compiler.currentScope.Constants)
 	default:
 		fmt.Println(expr)
 	}
