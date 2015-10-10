@@ -1,5 +1,7 @@
 package gython
 
+import "github.com/brettlangdon/gython/bytecode"
+
 type CodeObject struct {
 	ArgCount            int
 	KeywordOnlyArgCount int
@@ -43,3 +45,9 @@ func NewCodeObject(filename []byte, name []byte, firstLineNumber int) *CodeObjec
 }
 
 func (codeobject *CodeObject) object() {}
+func (codeobject *CodeObject) AppendOpcode(op bytecode.Opcode) {
+	codeobject.Code.Append(byte(op))
+}
+func (codeobject *CodeObject) AppendInt(i int) {
+	codeobject.Code.Append(byte(i))
+}

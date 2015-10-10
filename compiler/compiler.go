@@ -50,6 +50,27 @@ func (compiler *Compiler) assemble(addNone bool) *gython.CodeObject {
 	}
 
 	codeobject := gython.NewCodeObject([]byte{}, []byte{}, 0)
+	for _, instr := range compiler.currentScope.Instructions {
+		arg := 0
+		ext := 0
+		size := instr.Size()
+		if instr.Hasarg {
+			arg = int(instr.Oparg.Value)
+			ext = arg >> 16
+		}
+
+		if size == 6 {
+			codeobject.AppendOpcode(bytecode.EXTENDED_ARG)
+			codeobject.AppendInt(ext & 0xff)
+			codeobject.AppendInt(ext >> 8)
+			arg &= 0xffff
+		}
+		codeobject.AppendOpcode(instr.Opcode)
+		if instr.Hasarg {
+			codeobject.AppendInt(arg & 0xff)
+			codeobject.AppendInt(arg >> 8)
+		}
+	}
 	return codeobject
 }
 
